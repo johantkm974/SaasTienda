@@ -2,6 +2,8 @@ package com.example.demo.model;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,6 +20,7 @@ public class DetalleCompra {
 
     @ManyToOne
     @JoinColumn(name = "compra_id", nullable = false)
+    @JsonIgnore
     private Compra compra;
 
     @ManyToOne
@@ -30,4 +33,8 @@ public class DetalleCompra {
     @Column(name = "costo_unitario", nullable = false, precision = 10, scale = 2) 
     private BigDecimal costoUnitario;
 
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal subtotal;
+
 }
+
