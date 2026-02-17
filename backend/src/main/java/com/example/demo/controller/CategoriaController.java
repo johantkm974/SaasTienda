@@ -8,31 +8,32 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/categorias") // <--- ESTA ES LA RUTA QUE USA EL JS
+@RequestMapping("/api/categorias")
 @RequiredArgsConstructor
 public class CategoriaController {
 
     private final CategoriaService categoriaService;
 
-    // GET /api/categorias -> Devuelve la lista para el <select>
+    @PostMapping
+    public Categoria crear(@RequestBody Categoria categoria) {
+        return categoriaService.crear(categoria);
+    }
+
+    @PutMapping("/{id}")
+    public Categoria actualizar(@PathVariable Integer id, @RequestBody Categoria categoria) {
+        return categoriaService.actualizar(id, categoria);
+    }
+
     @GetMapping
     public List<Categoria> listar() {
         return categoriaService.listar();
     }
 
-    // POST /api/categorias -> Crea o Edita
-    @PostMapping
-    public Categoria guardar(@RequestBody Categoria categoria) {
-        return categoriaService.guardar(categoria);
-    }
-
-    // GET /api/categorias/empresa/1 -> Lista filtrada (Opcional, pero útil)
     @GetMapping("/empresa/{empresaId}")
     public List<Categoria> listarPorEmpresa(@PathVariable Integer empresaId) {
         return categoriaService.listarPorEmpresa(empresaId);
     }
 
-    // DELETE /api/categorias/5 -> Elimina
     @DeleteMapping("/{id}")
     public void eliminar(@PathVariable Integer id) {
         categoriaService.eliminar(id);
