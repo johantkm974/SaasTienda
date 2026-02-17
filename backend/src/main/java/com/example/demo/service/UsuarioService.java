@@ -23,6 +23,24 @@ public class UsuarioService {
 
         return usuarioRepository.save(usuario);
     }
+    public Usuario actualizar(Integer id,Usuario usuarioActualizado){
+        return usuarioRepository.findById(id).map(usuarioExistente ->{
+                usuarioExistente.setNombre(usuarioActualizado.getNombre());
+                usuarioExistente.setDni(usuarioActualizado.getDni());
+                usuarioExistente.setCorreo(usuarioActualizado.getCorreo());
+                usuarioExistente.setContrasena(usuarioActualizado.getContrasena());
+
+                usuarioExistente.setEmpresa(usuarioActualizado.getEmpresa());
+                usuarioExistente.setRol(usuarioActualizado.getRol());
+
+                return usuarioRepository.save(usuarioExistente);
+
+        })
+        .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el ID: " + id));
+    }
+    public List<Usuario>listarTodos(){
+        return usuarioRepository.findAll();
+    }
 
     public List<Usuario> listarPorEmpresa(Integer empresaId) {
         return usuarioRepository.findByEmpresaId(empresaId);
@@ -32,4 +50,5 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 }
+
 
