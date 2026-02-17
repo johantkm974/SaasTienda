@@ -19,6 +19,15 @@ public class UsuarioController {
         return usuarioService.crear(usuario);
     }
 
+    @GetMapping
+    public List<Usuario>listarTodos(){
+        return usuarioService.listarTodos();
+    }
+    @PutMapping("/{id}")
+    public Usuario actualizar(@PathVariable Integer id, @RequestBody Usuario usuario){
+        return usuarioService.actualizar(id, usuario);
+    }
+
     @GetMapping("/empresa/{empresaId}")
     public List<Usuario> listarPorEmpresa(@PathVariable Integer empresaId) {
         return usuarioService.listarPorEmpresa(empresaId);
