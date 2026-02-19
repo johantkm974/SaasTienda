@@ -1,7 +1,10 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Categoria;
+import com.example.demo.model.Empresa;
 import com.example.demo.repository.CategoriaRepository;
+import com.example.demo.repository.EmpresaRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,41 +15,34 @@ import java.util.List;
 public class CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
+    private final EmpresaRepository empresaRepository; // 👈 FALTABA ESTO
 
-    // 1. CREAR (Protegido)
-    public Categoria crear(Categoria categoria) {
-        categoria.setId(null);
+    public Categoria crearConEmpresa(Categoria categoria, Integer empresaId) {
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+
+        categoria.setEmpresa(empresa);
         return categoriaRepository.save(categoria);
     }
 
-    // 2. ACTUALIZAR (Controlado)
-    public Categoria actualizar(Integer id, Categoria categoriaActualizada) {
-        return categoriaRepository.findById(id).map(categoriaExistente -> {
-            categoriaExistente.setNombre(categoriaActualizada.getNombre());
-            categoriaExistente.setDescripcion(categoriaActualizada.getDescripcion());
-            categoriaExistente.setEmpresa(categoriaActualizada.getEmpresa());
-            
-            return categoriaRepository.save(categoriaExistente);
-        }).orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-    }
-
-    public List<Categoria> listar() {
-        return categoriaRepository.findAll();
+    public Categoria actualizarSeguro(Integer id, Categoria actualizada, Integer empresaId) {
+        return categoriaRepository.findByIdAndEmpresaId(id, empresaId)
+                .map(existente -> {
+                    existente.setNombre(actualizada.getNombre());
+                    existente.setDescripcion(actualizada.getDescripcion());
+                    return categoriaRepository.save(existente);
+                })
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada en su empresa"));
     }
 
     public List<Categoria> listarPorEmpresa(Integer empresaId) {
         return categoriaRepository.findByEmpresaId(empresaId);
     }
 
-    public Categoria buscarPorId(Integer id) {
-        return categoriaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-    }
+    public void eliminarSeguro(Integer id, Integer empresaId) {
+        Categoria categoria = categoriaRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada en su empresa"));
 
-    public void eliminar(Integer id) {
-        if (!categoriaRepository.existsById(id)) {
-            throw new RuntimeException("No se puede eliminar, la categoría no existe");
-        }
-        categoriaRepository.deleteById(id);
+        categoriaRepository.delete(categoria);
     }
 }
