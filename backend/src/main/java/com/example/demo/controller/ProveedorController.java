@@ -1,45 +1,70 @@
-package com.example.demo.controller;
+package com.example.demo.service;
 
+import com.example.demo.model.Empresa;
 import com.example.demo.model.Proveedor;
-import com.example.demo.service.ProveedorService;
+import com.example.demo.repository.EmpresaRepository;
+import com.example.demo.repository.ProveedorRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/proveedores")
+@Service
 @RequiredArgsConstructor
-public class ProveedorController {
+public class ProveedorService {
 
-    private final ProveedorService proveedorService;
+    private final ProveedorRepository proveedorRepository;
+    private final EmpresaRepository empresaRepository;
 
-    @PostMapping
-    public Proveedor guardar(@RequestBody Proveedor proveedor) {
-        return proveedorService.crear(proveedor);
-    }   
-    @PutMapping("/{id}")
-    public Proveedor actualizar(@PathVariable Integer id, @RequestBody Proveedor proveedor) {
-        return proveedorService.actualizar(id, proveedor);
+    public Proveedor crearSeguro(Proveedor proveedor, Integer empresaId) {
+
+        proveedor.setId(null);
+
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+
+        proveedor.setEmpresa(empresa);
+
+        return proveedorRepository.save(proveedor);
     }
 
-    @GetMapping
-    public List<Proveedor> listarTodos() {
-        return proveedorService.listarTodos();
+    public Proveedor actualizarSeguro(Integer id,
+                                      Proveedor proveedorActualizado,
+                                      Integer empresaId) {
+
+        return proveedorRepository.findByIdAndEmpresaId(id, empresaId)
+                .map(proveedorExistente -> {
+
+                    proveedorExistente.setNombre(proveedorActualizado.getNombre());
+                    proveedorExistente.setIdentificacion(proveedorActualizado.getIdentificacion());
+                    proveedorExistente.setTelefono(proveedorActualizado.getTelefono());
+                    proveedorExistente.setCorreo(proveedorActualizado.getCorreo());
+
+                    return proveedorRepository.save(proveedorExistente);
+
+                }).orElseThrow(() ->
+                        new RuntimeException("Proveedor no pertenece a su empresa"));
     }
 
-    @GetMapping("/{id}")
-    public Proveedor buscar(@PathVariable Integer id) {
-        return proveedorService.buscarPorId(id);
+    public List<Proveedor> listarPorEmpresa(Integer empresaId) {
+        return proveedorRepository.findByEmpresaId(empresaId);
     }
 
-    @GetMapping("/empresa/{empresaId}")
-    public List<Proveedor> listarPorEmpresa(@PathVariable Integer empresaId) {
-        return proveedorService.listarPorEmpresa(empresaId);
+    public Proveedor buscarPorIdSeguro(Integer id, Integer empresaId) {
+
+        return proveedorRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() ->
+                        new RuntimeException("Proveedor no encontrado en su empresa"));
     }
 
-    @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Integer id) {
-        proveedorService.eliminar(id);
+    public void eliminarSeguro(Integer id, Integer empresaId) {
+
+        Proveedor proveedor = proveedorRepository
+                .findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() ->
+                        new RuntimeException("Proveedor no pertenece a su empresa"));
+
+        proveedorRepository.delete(proveedor);
     }
 }
+
