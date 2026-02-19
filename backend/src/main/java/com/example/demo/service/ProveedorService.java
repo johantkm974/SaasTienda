@@ -1,6 +1,8 @@
 package com.example.demo.service;
 
+import com.example.demo.model.Empresa;
 import com.example.demo.model.Proveedor;
+import com.example.demo.repository.EmpresaRepository;
 import com.example.demo.repository.ProveedorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,41 +14,59 @@ import java.util.List;
 public class ProveedorService {
 
     private final ProveedorRepository proveedorRepository;
+    private final EmpresaRepository empresaRepository;
 
-    public Proveedor crear(Proveedor proveedor){
+    public Proveedor crearSeguro(Proveedor proveedor, Integer empresaId) {
+
         proveedor.setId(null);
+
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+
+        proveedor.setEmpresa(empresa);
+
         return proveedorRepository.save(proveedor);
     }
-    public Proveedor actualizar(Integer id, Proveedor proveedorActualizado){
-        return proveedorRepository.findById(id).map(proveedorExistente->{
 
-            proveedorExistente.setNombre(proveedorActualizado.getNombre());
-            proveedorExistente.setIdentificacion(proveedorActualizado.getIdentificacion());
-            proveedorExistente.setTelefono(proveedorActualizado.getTelefono());
-            proveedorExistente.setCorreo(proveedorActualizado.getCorreo());
+    public Proveedor actualizarSeguro(Integer id,
+                                      Proveedor proveedorActualizado,
+                                      Integer empresaId) {
 
-            proveedorExistente.setEmpresa(proveedorActualizado.getEmpresa());
+        return proveedorRepository.findByIdAndEmpresaId(id, empresaId)
+                .map(proveedorExistente -> {
 
-            return proveedorRepository.save(proveedorExistente);
+                    proveedorExistente.setNombre(proveedorActualizado.getNombre());
+                    proveedorExistente.setIdentificacion(proveedorActualizado.getIdentificacion());
+                    proveedorExistente.setTelefono(proveedorActualizado.getTelefono());
+                    proveedorExistente.setCorreo(proveedorActualizado.getCorreo());
 
-        }).orElseThrow(()-> new RuntimeException("Proveedor no enocntrado con el ID"+ id));
+                    return proveedorRepository.save(proveedorExistente);
+
+                }).orElseThrow(() ->
+                        new RuntimeException("Proveedor no pertenece a su empresa"));
     }
 
     public List<Proveedor> listarPorEmpresa(Integer empresaId) {
         return proveedorRepository.findByEmpresaId(empresaId);
     }
-    public List<Proveedor> listarTodos(){
-        return proveedorRepository.findAll();
-    }
-    public Proveedor buscarPorId(Integer id){
-        return proveedorRepository.findById(id).orElseThrow(()->new RuntimeException("Proveedor no encontrado con el id"+ id)); 
+
+    public Proveedor buscarPorIdSeguro(Integer id, Integer empresaId) {
+
+        return proveedorRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() ->
+                        new RuntimeException("Proveedor no encontrado en su empresa"));
     }
 
-    public void eliminar(Integer id){
-        if(!proveedorRepository.existsById(id)){
-            throw new RuntimeException("No se puede eliminar, el proveedor no existe");
-        }
-        proveedorRepository.deleteById(id);
+    public void eliminarSeguro(Integer id, Integer empresaId) {
+
+        Proveedor proveedor = proveedorRepository
+                .findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() ->
+                        new RuntimeException("Proveedor no pertenece a su empresa"));
+
+        proveedorRepository.delete(proveedor);
     }
 }
+
+
 
