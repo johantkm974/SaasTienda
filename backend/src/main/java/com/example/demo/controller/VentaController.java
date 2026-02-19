@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Venta;
+import com.example.demo.service.JwtService;
 import com.example.demo.service.VentaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,28 +14,36 @@ import java.util.List;
 public class VentaController {
 
     private final VentaService ventaService;
+    private final JwtService jwtService;
 
-    // CREAR VENTA (El que ya tenías)
     @PostMapping
-    public Venta registrar(@RequestBody Venta venta) {
-        return ventaService.registrarVenta(venta);
+    public Venta registrar(@RequestBody Venta venta,
+                           @RequestHeader("Authorization") String token) {
+
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return ventaService.registrarVenta(venta, empresaId);
     }
 
-    // VER EL RECIBO DE UNA VENTA ESPECÍFICA
     @GetMapping("/{id}")
-    public Venta buscar(@PathVariable Integer id) {
-        return ventaService.buscarPorId(id);
+    public Venta buscar(@PathVariable Integer id,
+                        @RequestHeader("Authorization") String token) {
+
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return ventaService.buscarPorIdSeguro(id, empresaId);
     }
 
-    // VER TODAS LAS VENTAS DE UNA EMPRESA
-    @GetMapping("/empresa/{empresaId}")
-    public List<Venta> listarPorEmpresa(@PathVariable Integer empresaId) {
+    @GetMapping
+    public List<Venta> listar(@RequestHeader("Authorization") String token) {
+
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
         return ventaService.listarPorEmpresa(empresaId);
     }
 
-    // VER TODAS LAS COMPRAS DE UN CLIENTE
     @GetMapping("/usuario/{usuarioId}")
-    public List<Venta> listarPorUsuario(@PathVariable Integer usuarioId) {
-        return ventaService.listarPorUsuario(usuarioId);
+    public List<Venta> listarPorUsuario(@PathVariable Integer usuarioId,
+                                        @RequestHeader("Authorization") String token) {
+
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return ventaService.listarPorUsuarioSeguro(usuarioId, empresaId);
     }
 }
