@@ -15,52 +15,53 @@ public class CompraService {
 
     private final CompraRepository compraRepository;
     private final ProductoRepository productoRepository;
+    private final EmpresaRepository empresaRepository;
 
     @Transactional
-    public Compra registrarCompra(Compra compra) {
-        
-        // 1. SEGURIDAD: Evitar sobreescrituras
+    public Compra registrarCompra(Compra compra, Integer empresaId) {
+
         compra.setId(null);
 
-        // 2. VALIDACIÓN: Que no manden compras vacías
         if (compra.getDetalles() == null || compra.getDetalles().isEmpty()) {
             throw new RuntimeException("La compra debe contener al menos un producto");
         }
+
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+
+        compra.setEmpresa(empresa);
 
         BigDecimal total = BigDecimal.ZERO;
 
         for (DetalleCompra detalle : compra.getDetalles()) {
 
             Producto producto = productoRepository
-                    .findById(detalle.getProducto().getId())
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                    .findByIdAndEmpresaId(detalle.getProducto().getId(), empresaId)
+                    .orElseThrow(() -> new RuntimeException("Producto no pertenece a su empresa"));
 
-            // 3. SUMAR STOCK
+            // SUMAR STOCK
             producto.setStockActual(producto.getStockActual() + detalle.getCantidad());
             productoRepository.save(producto);
 
-            // 4. MATEMÁTICAS: Calcular el subtotal de este renglón (Precio Unitario de Compra x Cantidad)
-            // Nota: Aquí SÍ confiamos en el precio del JSON porque el proveedor nos puede cambiar el precio de costo.
-            BigDecimal subtotal = detalle.getCostoUnitario().multiply(BigDecimal.valueOf(detalle.getCantidad()));
-            detalle.setSubtotal(subtotal);
+            // CALCULAR SUBTOTAL
+            BigDecimal subtotal = detalle.getCostoUnitario()
+                    .multiply(BigDecimal.valueOf(detalle.getCantidad()));
 
-            // Relacionar el detalle con la compra
+            detalle.setSubtotal(subtotal);
             detalle.setCompra(compra);
 
-            // 5. Acumular el total
             total = total.add(subtotal);
         }
 
-        // 6. Guardar el total calculado en la compra principal
         compra.setTotalCompra(total);
 
         return compraRepository.save(compra);
     }
 
-    // MÉTODOS DE LECTURA (GET)
-    public Compra buscarPorId(Integer id) {
-        return compraRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Compra no encontrada"));
+    public Compra buscarPorIdSeguro(Integer id, Integer empresaId) {
+        return compraRepository
+                .findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Compra no encontrada en su empresa"));
     }
 
     public List<Compra> listarPorEmpresa(Integer empresaId) {
