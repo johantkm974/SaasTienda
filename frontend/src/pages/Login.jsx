@@ -17,10 +17,13 @@ export function Login(){
     e.preventDefault()
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const response = await fetch('http://localhost:8080/auth/login', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ correo, password }), // El DTO que espera Java
+        body: JSON.stringify({ 
+          correo: correo,       
+          contrasena: password  
+        })
       });
 
       if (!response.ok) {
@@ -29,14 +32,14 @@ export function Login(){
       }
 
       const usuario = await response.json();
-      localStorage.setItem('user_session', JSON.stringify(usuario))
-      console.log(localStorage)
+      localStorage.setItem('token-user', JSON.stringify(usuario.token))
       
       console.log('Login exitoso:', usuario);
-      navigate('/dashboard');
+      navigate('/dashboard')
 
     } catch (error) {
-      setError(error.message);
+      // console.error("Error capturado:", error);
+      alert("Error al entrar: " + error.message);
     }
   }
 

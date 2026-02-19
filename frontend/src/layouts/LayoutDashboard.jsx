@@ -20,18 +20,27 @@ export function LayoutDashboard() {
   const [empresa, setEmpresa] = useState(null)
 
   const handleLogout = () => {
-    localStorage.removeItem('user_session');
+    localStorage.removeItem('token-user');
     navigate('/login');
   };
 
   useEffect(()=>{
-    const session = JSON.parse(localStorage.getItem('user_session'))
-    const empresaId = session?.empresaId
+    const sessionData = JSON.parse(localStorage.getItem('token-user'))
+    const token = sessionData
+    console.log(token)
 
-    if(empresaId){
-      fetch(`http://localhost:8080/api/empresas/${session.empresaId}`)
+    if(token){
+      fetch(`http://localhost:8080/api/empresas`,{
+          method : 'GET',
+          headers : {
+            'Authorization' : `Bearer ${token}`,
+            'Content-Type' : 'application/json'
+          }
+        })
         .then(Response => Response.json())
-        .then(data=> setEmpresa(data))
+        .then(data=> {
+          console.log(data)
+        })
     }
   },[])
 
@@ -79,8 +88,8 @@ export function LayoutDashboard() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10">
           <div className="flex items-center space-x-4">
-             <h2 className="font-bold text-slate-800">Bodega {`${empresa.nombreComercial}`}</h2>
-             <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">{`${empresa.estado}`}</span>
+             {/* <h2 className="font-bold text-slate-800">Bodega {`${empresa.nombreComercial}`}</h2> */}
+             {/* <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">{`${empresa.estado}`}</span> */}
           </div>
           
           <div className="flex items-center space-x-4">
