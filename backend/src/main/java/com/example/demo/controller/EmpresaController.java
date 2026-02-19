@@ -2,10 +2,10 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Empresa;
 import com.example.demo.service.EmpresaService;
+import com.example.demo.service.JwtService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/empresas")
@@ -13,27 +13,20 @@ import java.util.List;
 public class EmpresaController {
 
     private final EmpresaService empresaService;
+    private final JwtService jwtService;
 
-    @PostMapping
-    public Empresa registrar(@RequestBody Empresa empresa) {
-        return empresaService.registrar(empresa);
-    }
-    @PutMapping("/{id}")
-    public Empresa actualizar(@PathVariable Integer id,@RequestBody Empresa empresa){
-        return empresaService.actualizar(id, empresa);
-    }
-
-    @GetMapping
-    public List<Empresa> listar() {
-        return empresaService.listar();
-    }
-    @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Integer id){
-        empresaService.eliminar(id);
+    // Solo ver la información de MI empresa
+    @GetMapping("/mi-empresa")
+    public Empresa buscarMiEmpresa(@RequestHeader("Authorization") String token) {
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return empresaService.buscarPorId(empresaId);
     }
 
-    @GetMapping("/{id}")
-    public Empresa buscar(@PathVariable Integer id) {
-        return empresaService.buscarPorId(id);
+    // Actualizar solo MI empresa
+    @PutMapping("/actualizar")
+    public Empresa actualizarMiEmpresa(@RequestHeader("Authorization") String token, @RequestBody Empresa empresa) {
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return empresaService.actualizar(empresaId, empresa);
     }
 }
+
