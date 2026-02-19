@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Categoria;
 import com.example.demo.service.CategoriaService;
+import com.example.demo.service.JwtService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,29 +15,36 @@ import java.util.List;
 public class CategoriaController {
 
     private final CategoriaService categoriaService;
-
-    @PostMapping
-    public Categoria crear(@RequestBody Categoria categoria) {
-        return categoriaService.crear(categoria);
-    }
-
-    @PutMapping("/{id}")
-    public Categoria actualizar(@PathVariable Integer id, @RequestBody Categoria categoria) {
-        return categoriaService.actualizar(id, categoria);
-    }
+    private final JwtService jwtService;
 
     @GetMapping
-    public List<Categoria> listar() {
-        return categoriaService.listar();
-    }
-
-    @GetMapping("/empresa/{empresaId}")
-    public List<Categoria> listarPorEmpresa(@PathVariable Integer empresaId) {
+    public List<Categoria> listar(@RequestHeader("Authorization") String token) {
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
         return categoriaService.listarPorEmpresa(empresaId);
     }
 
+    @PostMapping
+    public Categoria crear(@RequestBody Categoria categoria,
+                           @RequestHeader("Authorization") String token) {
+
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return categoriaService.crearConEmpresa(categoria, empresaId);
+    }
+
+    @PutMapping("/{id}")
+    public Categoria actualizar(@PathVariable Integer id,
+                                @RequestBody Categoria categoria,
+                                @RequestHeader("Authorization") String token) {
+
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return categoriaService.actualizarSeguro(id, categoria, empresaId);
+    }
+
     @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Integer id) {
-        categoriaService.eliminar(id);
+    public void eliminar(@PathVariable Integer id,
+                         @RequestHeader("Authorization") String token) {
+
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        categoriaService.eliminarSeguro(id, empresaId);
     }
 }
