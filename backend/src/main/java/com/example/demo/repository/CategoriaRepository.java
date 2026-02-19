@@ -6,5 +6,10 @@ import java.util.*;
 
 @Repository
 public interface CategoriaRepository extends JpaRepository<Categoria, Integer> {
+
     List<Categoria> findByEmpresaId(Integer empresaId);
+
+    Optional<Categoria> findByIdAndEmpresaId(Integer id, Integer empresaId);
+
+    boolean existsByIdAndEmpresaId(Integer id, Integer empresaId);
 }
