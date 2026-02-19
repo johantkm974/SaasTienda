@@ -1,70 +1,59 @@
-package com.example.demo.service;
+package com.example.demo.controller;
 
-import com.example.demo.model.Empresa;
 import com.example.demo.model.Proveedor;
-import com.example.demo.repository.EmpresaRepository;
-import com.example.demo.repository.ProveedorRepository;
+import com.example.demo.service.JwtService;
+import com.example.demo.service.ProveedorService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Service
+@RestController
+@RequestMapping("/api/proveedores")
 @RequiredArgsConstructor
-public class ProveedorService {
+public class ProveedorController {
 
-    private final ProveedorRepository proveedorRepository;
-    private final EmpresaRepository empresaRepository;
+    private final ProveedorService proveedorService;
+    private final JwtService jwtService;
 
-    public Proveedor crearSeguro(Proveedor proveedor, Integer empresaId) {
+    @PostMapping
+    public Proveedor guardar(@RequestBody Proveedor proveedor,
+                             @RequestHeader("Authorization") String token) {
 
-        proveedor.setId(null);
-
-        Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
-
-        proveedor.setEmpresa(empresa);
-
-        return proveedorRepository.save(proveedor);
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return proveedorService.crearSeguro(proveedor, empresaId);
     }
 
-    public Proveedor actualizarSeguro(Integer id,
-                                      Proveedor proveedorActualizado,
-                                      Integer empresaId) {
+    @PutMapping("/{id}")
+    public Proveedor actualizar(@PathVariable Integer id,
+                                @RequestBody Proveedor proveedor,
+                                @RequestHeader("Authorization") String token) {
 
-        return proveedorRepository.findByIdAndEmpresaId(id, empresaId)
-                .map(proveedorExistente -> {
-
-                    proveedorExistente.setNombre(proveedorActualizado.getNombre());
-                    proveedorExistente.setIdentificacion(proveedorActualizado.getIdentificacion());
-                    proveedorExistente.setTelefono(proveedorActualizado.getTelefono());
-                    proveedorExistente.setCorreo(proveedorActualizado.getCorreo());
-
-                    return proveedorRepository.save(proveedorExistente);
-
-                }).orElseThrow(() ->
-                        new RuntimeException("Proveedor no pertenece a su empresa"));
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return proveedorService.actualizarSeguro(id, proveedor, empresaId);
     }
 
-    public List<Proveedor> listarPorEmpresa(Integer empresaId) {
-        return proveedorRepository.findByEmpresaId(empresaId);
+    @GetMapping
+    public List<Proveedor> listar(@RequestHeader("Authorization") String token) {
+
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return proveedorService.listarPorEmpresa(empresaId);
     }
 
-    public Proveedor buscarPorIdSeguro(Integer id, Integer empresaId) {
+    @GetMapping("/{id}")
+    public Proveedor buscar(@PathVariable Integer id,
+                            @RequestHeader("Authorization") String token) {
 
-        return proveedorRepository.findByIdAndEmpresaId(id, empresaId)
-                .orElseThrow(() ->
-                        new RuntimeException("Proveedor no encontrado en su empresa"));
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return proveedorService.buscarPorIdSeguro(id, empresaId);
     }
 
-    public void eliminarSeguro(Integer id, Integer empresaId) {
+    @DeleteMapping("/{id}")
+    public void eliminar(@PathVariable Integer id,
+                         @RequestHeader("Authorization") String token) {
 
-        Proveedor proveedor = proveedorRepository
-                .findByIdAndEmpresaId(id, empresaId)
-                .orElseThrow(() ->
-                        new RuntimeException("Proveedor no pertenece a su empresa"));
-
-        proveedorRepository.delete(proveedor);
+        Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        proveedorService.eliminarSeguro(id, empresaId);
     }
 }
 
