@@ -15,44 +15,45 @@ public class VentaService {
 
     private final VentaRepository ventaRepository;
     private final ProductoRepository productoRepository;
+    private final EmpresaRepository empresaRepository;
 
     @Transactional
-    public Venta registrarVenta(Venta venta) {
-        
-        // 1. SEGURIDAD: Evitar sobreescritura de ventas
+    public Venta registrarVenta(Venta venta, Integer empresaId) {
+
         venta.setId(null);
 
-        // 2. VALIDACIÓN: Que no manden ventas sin detalles
         if (venta.getDetalles() == null || venta.getDetalles().isEmpty()) {
             throw new RuntimeException("La venta debe contener al menos un producto");
         }
+
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+
+        venta.setEmpresa(empresa);
 
         BigDecimal total = BigDecimal.ZERO;
 
         for (DetalleVenta detalle : venta.getDetalles()) {
 
             Producto producto = productoRepository
-                    .findById(detalle.getProducto().getId())
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                    .findByIdAndEmpresaId(detalle.getProducto().getId(), empresaId)
+                    .orElseThrow(() ->
+                            new RuntimeException("Producto no pertenece a su empresa"));
 
             if (producto.getStockActual() < detalle.getCantidad()) {
                 throw new RuntimeException("Stock insuficiente para " + producto.getNombre());
             }
 
-            // RESTAR STOCK
             producto.setStockActual(producto.getStockActual() - detalle.getCantidad());
             productoRepository.save(producto);
 
-            // 3. SEGURIDAD: Usar el precio REAL de la base de datos, no el del JSON
             BigDecimal precioReal = producto.getPrecioVenta();
             detalle.setPrecioUnitario(precioReal);
 
-            // Calcular subtotal con el precio real
-            BigDecimal subtotal = precioReal.multiply(BigDecimal.valueOf(detalle.getCantidad()));
+            BigDecimal subtotal = precioReal.multiply(
+                    BigDecimal.valueOf(detalle.getCantidad()));
 
             detalle.setSubtotal(subtotal);
-            
-            // Relacionar este detalle con la venta padre
             detalle.setVenta(venta);
 
             total = total.add(subtotal);
@@ -62,18 +63,22 @@ public class VentaService {
 
         return ventaRepository.save(venta);
     }
-    public Venta buscarPorId(Integer id) {
-        return ventaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Venta no encontrada con el ID: " + id));
+
+    public Venta buscarPorIdSeguro(Integer id, Integer empresaId) {
+
+        return ventaRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() ->
+                        new RuntimeException("Venta no encontrada en su empresa"));
     }
 
-    // 2. Historial de ventas de una empresa
     public List<Venta> listarPorEmpresa(Integer empresaId) {
         return ventaRepository.findByEmpresaId(empresaId);
     }
 
-    // 3. Historial de compras de un cliente (Usuario)
-    public List<Venta> listarPorUsuario(Integer usuarioId) {
-        return ventaRepository.findByUsuarioId(usuarioId);
+    public List<Venta> listarPorUsuarioSeguro(Integer usuarioId,
+                                              Integer empresaId) {
+
+        return ventaRepository
+                .findByUsuarioIdAndEmpresaId(usuarioId, empresaId);
     }
 }
