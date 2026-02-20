@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Productos</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 900px; margin: 0 auto; background-color: #f4f4f4; }
+        
+        /* Estilos de la tarjeta del formulario */
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 30px; 
+        }
+
+        /* Estilos de los inputs y selects */
+        label { display: block; margin-top: 10px; font-weight: bold; color: #333; }
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            margin-top: 5px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            box-sizing: border-box; /* Para que el padding no rompa el ancho */
+        }
+
+        /* Botones */
+        button { 
+            padding: 10px 20px; 
+            margin-top: 15px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 16px;
+        }
+        .btn-save { background: #28a745; color: white; }
+        .btn-save:hover { background: #218838; }
+        
+        .btn-clean { background: #6c757d; color: white; margin-left: 10px; }
+        .btn-clean:hover { background: #5a6268; }
+
+        /* Tabla */
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #007bff; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+
+        /* Botones de acción en tabla */
+        .btn-edit { background: #ffc107; color: #212529; padding: 5px 10px; font-size: 14px; margin-right: 5px; }
+        .btn-delete { background: #dc3545; color: white; padding: 5px 10px; font-size: 14px; }
+        
+        a { text-decoration: none; color: #007bff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <a href="/index.html">⬅ Volver al Inicio</a>
+    <h1 style="text-align: center; color: #333;">Inventario de Productos</h1>
+
+    <div class="card">
+        <h3 style="margin-top: 0;">Nuevo / Editar Producto</h3>
+        
+        <input type="hidden" id="idProducto">
+
+        <label>Nombre del Producto:</label>
+        <input type="text" id="nombre" placeholder="Ej: Laptop HP Pavillion">
+
+        <div style="display: flex; gap: 20px;">
+            <div style="flex: 1;">
+                <label>Precio Venta (S/):</label>
+                <input type="number" id="precio" step="0.01" placeholder="Ej: 1500.00">
+            </div>
+            <div style="flex: 1;">
+                <label>Stock:</label>
+                <input type="number" id="stock" placeholder="Ej: 10">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 20px;">
+            <div style="flex: 1;">
+                <label>Empresa:</label>
+                <select id="empresaSelect">
+                    <option value="">Cargando empresas...</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label>Categoría:</label>
+                <select id="categoriaSelect">
+                    <option value="">Cargando categorías...</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-save" onclick="guardarProducto()">💾 Guardar Producto</button>
+        <button class="btn-clean" onclick="limpiarFormulario()">🧹 Limpiar</button>
+    </div>
+
+    <h3>Listado de Productos</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Empresa</th>   <th>Categoría</th> <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tablaProductos">
+            </tbody>
+    </table>
+
+    <script src="/js/producto.js"></script>
+
+</body>
+</html>
