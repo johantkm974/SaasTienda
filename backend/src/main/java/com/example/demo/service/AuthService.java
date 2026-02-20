@@ -52,4 +52,3 @@ public String registrar(AuthRequest request, Integer empresaId) {
         return jwtService.generateToken(usuario);
     }
 }
-

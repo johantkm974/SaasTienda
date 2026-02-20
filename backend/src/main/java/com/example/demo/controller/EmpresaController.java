@@ -7,6 +7,8 @@ import com.example.demo.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+
+
 @RestController
 @RequestMapping("/api/empresas")
 @RequiredArgsConstructor
@@ -29,4 +31,3 @@ public class EmpresaController {
         return empresaService.actualizar(empresaId, empresa);
     }
 }
-

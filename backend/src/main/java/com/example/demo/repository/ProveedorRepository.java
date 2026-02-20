@@ -6,4 +6,7 @@ import java.util.*;
 @Repository
 public interface ProveedorRepository extends JpaRepository<Proveedor, Integer> {
     List<Proveedor> findByEmpresaId(Integer empresaId);
+    Optional<Proveedor> findByIdAndEmpresaId(Integer id, Integer empresaId);
+    boolean existsByIdAndEmpresaId(Integer id, Integer empresaId);
+
 }

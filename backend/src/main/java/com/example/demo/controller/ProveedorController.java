@@ -56,4 +56,3 @@ public class ProveedorController {
         proveedorService.eliminarSeguro(id, empresaId);
     }
 }
-

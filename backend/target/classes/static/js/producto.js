@@ -1,33 +1,42 @@
-// RUTA RELATIVA: Funciona porque HTML y Java están en el mismo servidor (8080)
 const API_URL = "/api/productos";
+
+// Función auxiliar para obtener el token y evitar repetir código
+function obtenerToken() {
+    const token = localStorage.getItem('token_tienda');
+    if (!token) {
+        window.location.href = "/html/login.html";
+        return null;
+    }
+    return token;
+}
 
 // 1. AL CARGAR LA PÁGINA
 document.addEventListener("DOMContentLoaded", async () => {
-    await cargarCombos(); 
-    cargarProductos();
+    const token = obtenerToken();
+    if (token) {
+        await cargarCombos(token); 
+        cargarProductos(token);
+    }
 });
 
 // 2. CARGAR PRODUCTOS
-async function cargarProductos() {
+async function cargarProductos(token) {
     try {
-        // CORRECCIÓN 1: Usamos la ruta general para traer TODOS los productos
-        const respuesta = await fetch(API_URL);
+        const respuesta = await fetch(API_URL, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         
-        if (!respuesta.ok) {
-            console.error("Error al obtener productos:", respuesta.status);
+        if (respuesta.status === 403) {
+            window.location.href = "/html/login.html";
             return;
         }
 
         const productos = await respuesta.json();
-
-        // CORRECCIÓN 2: Selector arreglado. El ID ya pertenece al tbody.
         const tbody = document.getElementById("tablaProductos");
-        
-        // Limpiamos la tabla
         tbody.innerHTML = ""; 
 
         productos.forEach(p => {
-            // Validamos datos para evitar errores si vienen vacíos
             const nomEmpresa = p.empresa ? (p.empresa.nombreComercial || p.empresa.nombre) : 'Sin Empresa';
             const nomCategoria = p.categoria ? p.categoria.nombre : 'Sin Categoría';
             const idEmpresa = p.empresa ? p.empresa.id : '';
@@ -42,128 +51,73 @@ async function cargarProductos() {
                     <td>${nomEmpresa}</td>
                     <td>${nomCategoria}</td>
                     <td>
-                        <button onclick="llenarFormulario(${p.id}, '${p.nombre}', ${p.precioVenta}, ${p.stockActual}, '${idEmpresa}', '${idCategoria}')" 
-                                style="background:#ffc107; color:black; border:none; padding:5px; border-radius:3px; cursor:pointer;">
-                            Editar
-                        </button>
-                        <button onclick="eliminarProducto(${p.id})" 
-                                style="background:#dc3545; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer; margin-left:5px;">
-                            Eliminar
-                        </button>
+                        <button onclick="llenarFormulario(${p.id}, '${p.nombre}', ${p.precioVenta}, ${p.stockActual}, '${idEmpresa}', '${idCategoria}')" class="btn-edit">Editar</button>
+                        <button onclick="eliminarProducto(${p.id})" class="btn-delete">Eliminar</button>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         });
-    } catch (error) {
-        console.error("Error cargando productos:", error);
-    }
+    } catch (error) { console.error("Error:", error); }
 }
 
-// 3. CARGAR LISTAS DESPLEGABLES
-async function cargarCombos() {
+// 3. CARGAR LISTAS DESPLEGABLES (También necesitan Token)
+async function cargarCombos(token) {
     try {
-        // Cargar Empresas
-        const resEmp = await fetch('/api/empresas'); 
+        const headers = { 'Authorization': `Bearer ${token}` };
+        
+        const resEmp = await fetch('/api/empresas', { headers }); 
         const empresas = await resEmp.json();
         let htmlEmp = '<option value="">Seleccione una empresa...</option>';
-        empresas.forEach(e => {
-            htmlEmp += `<option value="${e.id}">${e.nombreComercial || e.nombre}</option>`; 
-        });
+        empresas.forEach(e => htmlEmp += `<option value="${e.id}">${e.nombreComercial || e.nombre}</option>`);
         document.getElementById("empresaSelect").innerHTML = htmlEmp;
 
-        // Cargar Categorías
-        const resCat = await fetch('/api/categorias'); 
+        const resCat = await fetch('/api/categorias', { headers }); 
         const categorias = await resCat.json();
         let htmlCat = '<option value="">Seleccione una categoría...</option>';
-        categorias.forEach(c => {
-            htmlCat += `<option value="${c.id}">${c.nombre}</option>`;
-        });
+        categorias.forEach(c => htmlCat += `<option value="${c.id}">${c.nombre}</option>`);
         document.getElementById("categoriaSelect").innerHTML = htmlCat;
-
-    } catch (error) {
-        console.error("Error cargando listas:", error);
-    }
+    } catch (error) { console.error("Error:", error); }
 }
 
-// 4. GUARDAR (CREAR O EDITAR)
+// 4. GUARDAR (Necesita Token)
 async function guardarProducto() {
+    const token = obtenerToken();
     const id = document.getElementById("idProducto").value;
-    const nombre = document.getElementById("nombre").value;
-    const precio = document.getElementById("precio").value;
-    const stock = document.getElementById("stock").value;
-    const empresaId = document.getElementById("empresaSelect").value;
-    const categoriaId = document.getElementById("categoriaSelect").value;
-
-    if (!nombre || !precio || !stock || !empresaId || !categoriaId) {
-        alert("Completa todos los campos, incluyendo Empresa y Categoría");
-        return;
-    }
+    // ... (obtener los demás campos igual que antes)
 
     const producto = {
-        nombre: nombre,
-        precioVenta: parseFloat(precio),
-        stockActual: parseInt(stock),
-        empresa: { id: parseInt(empresaId) },
-        categoria: { id: parseInt(categoriaId) }
+        nombre: document.getElementById("nombre").value,
+        precioVenta: parseFloat(document.getElementById("precio").value),
+        stockActual: parseInt(document.getElementById("stock").value),
+        empresa: { id: parseInt(document.getElementById("empresaSelect").value) },
+        categoria: { id: parseInt(document.getElementById("categoriaSelect").value) }
     };
+    if (id) producto.id = parseInt(id);
 
-    if (id) {
-        producto.id = parseInt(id);
-    }
+    const respuesta = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(producto)
+    });
 
-    try {
-        const respuesta = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(producto)
-        });
-
-        if (respuesta.ok) {
-            alert("Producto guardado con éxito");
-            limpiarFormulario();
-            cargarProductos();
-        } else {
-            alert("Error al guardar.");
-        }
-    } catch (error) {
-        console.error("Error:", error);
+    if (respuesta.ok) {
+        alert("¡Guardado!");
+        limpiarFormulario();
+        cargarProductos(token);
     }
 }
 
-// 5. ELIMINAR
+// 5. ELIMINAR (Necesita Token)
 async function eliminarProducto(id) {
-    if (!confirm("¿Estás seguro de eliminar este producto?")) return;
+    const token = obtenerToken();
+    if (!confirm("¿Eliminar?")) return;
 
-    try {
-        const respuesta = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE'
-        });
+    const respuesta = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
 
-        if (respuesta.ok) {
-            cargarProductos();
-        } else {
-            alert("No se pudo eliminar (es posible que tenga ventas asociadas)");
-        }
-    } catch (error) {
-        console.error("Error:", error);
-    }
-}
-
-// 6. UTILIDADES
-window.llenarFormulario = (id, nombre, precio, stock, idEmpresa, idCategoria) => {
-    document.getElementById("idProducto").value = id;
-    document.getElementById("nombre").value = nombre;
-    document.getElementById("precio").value = precio;
-    document.getElementById("stock").value = stock;
-    document.getElementById("empresaSelect").value = idEmpresa;
-    document.getElementById("categoriaSelect").value = idCategoria;
-};
-
-function limpiarFormulario() {
-    document.getElementById("idProducto").value = "";
-    document.getElementById("nombre").value = "";
-    document.getElementById("precio").value = "";
-    document.getElementById("stock").value = "";
-    document.getElementById("empresaSelect").value = "";
-    document.getElementById("categoriaSelect").value = "";
+    if (respuesta.ok) cargarProductos(token);
 }

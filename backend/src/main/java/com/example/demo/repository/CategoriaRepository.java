@@ -13,3 +13,4 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Integer> {
 
     boolean existsByIdAndEmpresaId(Integer id, Integer empresaId);
 }
+

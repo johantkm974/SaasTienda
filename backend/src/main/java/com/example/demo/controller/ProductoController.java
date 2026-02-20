@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-@RestController
+@RestController        
 @RequestMapping("/api/productos")
 @RequiredArgsConstructor
 public class ProductoController {
@@ -43,5 +43,5 @@ public class ProductoController {
     public void eliminar(@PathVariable Integer id, @RequestHeader("Authorization") String token){
         Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
         productoService.eliminarSeguro(id, empresaId);
-    }
+    }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
 }

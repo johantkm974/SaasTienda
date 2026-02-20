@@ -21,7 +21,7 @@ public class JwtService {
     public String generateToken(Usuario usuario) {
         Map<String, Object> extraClaims = new HashMap<>();
         
-        // Aquí guardamos la "llave" de la bodega
+        // Aquí guardamos la "llave" de la y 
         extraClaims.put("userId", usuario.getId());
         extraClaims.put("rol", usuario.getRol().getNombre());
         extraClaims.put("empresaId", usuario.getEmpresa().getId());

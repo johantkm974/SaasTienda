@@ -1,6 +1,0 @@
-{
-  "name": "backend",
-  "scripts": {
-    "backend": "mvn spring-boot:run"
-  }
-}
