@@ -1,6 +1,3 @@
--- ==========================================================
--- 1. CREACIÓN DE LA BASE DE DATOS
--- ==========================================================
 DROP DATABASE IF EXISTS saas_final;
 CREATE DATABASE saas_final CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE saas_final;
@@ -58,6 +55,7 @@ CREATE TABLE producto (
     descripcion VARCHAR(255),
     precio_venta DECIMAL(10,2) NOT NULL,
     stock_actual INT NOT NULL DEFAULT 0,
+    stock_minimo INT NOT NULL DEFAULT 5,
     imagen_url VARCHAR(255),
     FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE CASCADE,
     FOREIGN KEY (categoria_id) REFERENCES categoria(id) ON DELETE SET NULL
