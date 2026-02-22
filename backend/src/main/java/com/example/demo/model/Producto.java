@@ -33,8 +33,13 @@ public class Producto {
 
     @Column(name = "stock_actual", nullable = false)
     private Integer stockActual;
+    @Column(name = "stock_minimo", nullable = false)
+    private Integer stockMinimo = 5;
 
     @Column(name = "imagen_url")
     private String imagenUrl;
+
+    @Transient
+    private BigDecimal costoUnitario;
 
 }

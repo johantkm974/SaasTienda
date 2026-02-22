@@ -9,4 +9,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
     List<Producto> findByEmpresaId(Integer empresaId);
     // Para validar stock antes de vender
     Optional<Producto> findByIdAndEmpresaId(Integer id, Integer empresaId);
+    List<Producto> findByEmpresaIdAndStockActualLessThanEqual(
+        Integer empresaId, Integer stockMinimo);
 }
