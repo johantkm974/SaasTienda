@@ -12,6 +12,7 @@ import { Inventario } from './layouts/Inventario.jsx';
 import { Compras } from './layouts/Compras.jsx';
 import { Reportes } from './layouts/Reportes.jsx';
 import { Ajustes } from './layouts/Ajustes.jsx';
+import { Contactos } from './layouts/Contactos.jsx';
 
 function App() {
 
@@ -29,6 +30,7 @@ function App() {
             <Route path='compras' element={<Compras />} />
             <Route path='reportes' element={<Reportes />} />
             <Route path='ajustes' element={<Ajustes />} />
+            <Route path='contactos' element={<Contactos />} />
           </Route>
         </Route>
       </Routes>

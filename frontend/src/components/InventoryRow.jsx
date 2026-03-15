@@ -16,11 +16,11 @@ export function InventoryRow({ name, category, stock, price, status }){
           {status}
         </span>
       </td>
-      <td className="py-4 px-4 text-right">
+      {/* <td className="py-4 px-4 text-right">
         <button className="text-slate-400 hover:text-emerald-600 transition-colors">
           <Plus size={18} />
         </button>
-      </td>
+      </td> */}
     </tr>
   )
 }

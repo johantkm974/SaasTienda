@@ -1,4 +1,4 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate, NavLink } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { SidebarItem } from '../components/SidebarItem';
 import { 
@@ -12,37 +12,106 @@ import {
   Search, 
   History,
   Store,
+  Users,
 } from 'lucide-react';
 
 export function LayoutDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('');
-  const [empresa, setEmpresa] = useState(null)
+
+  const [empresa, setEmpresa] = useState([])
+  const [productos, setProductos] = useState([])
+  const [categorias, setCategorias] = useState([])
+  const [proveedores, setProveedores] = useState([])
 
   const handleLogout = () => {
     localStorage.removeItem('token-user');
     navigate('/login');
-  };
+  }
+
+  const addProveedor = (newProveedor)=>{
+    fetch('http://localhost:8080/api/proveedores', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('token-user'))}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        empresaId: empresa.id,
+        nombre: newProveedor.nombre,
+        identificacion: newProveedor.identificacion,
+        telefono: newProveedor.telefono,
+        correo: newProveedor.correo,
+        // contactPerson: newProveedor.contactPerson,
+        // contactPersonCell: newProveedor.contactPersonCell
+      })
+    })
+      .then(response => response.json())
+      .then(data => {
+        // actualizar estado de proveedores
+        setProveedores([...proveedores, data]);
+      })
+      .catch(error => console.error('Error al agregar proveedor:', error))
+  }
 
   useEffect(()=>{
-    const sessionData = JSON.parse(localStorage.getItem('token-user'))
-    const token = sessionData
-    console.log(token)
+    const token = JSON.parse(localStorage.getItem('token-user'))
 
-    if(token){
-      fetch(`http://localhost:8080/api/empresas`,{
-          method : 'GET',
-          headers : {
-            'Authorization' : `Bearer ${token}`,
-            'Content-Type' : 'application/json'
-          }
-        })
-        .then(Response => Response.json())
-        .then(data=> {
-          console.log(data)
-        })
-    }
+    if(!token)return
+
+    //cargar datos de la empresa
+    fetch(`http://localhost:8080/api/empresas/mi-empresa`,{
+        method : 'GET',
+        headers : {
+          'Authorization' : `Bearer ${token}`,
+          'Content-Type' : 'application/json'
+        }
+      })
+      .then(Response => Response.json())
+      .then(data=> setEmpresa(data))
+
+    //cargar productos
+    fetch('http://localhost:8080/api/productos', {
+      method : 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`, 
+        'Content-Type' : 'application/json'
+      }
+    })
+    .then(Response => Response.json())
+    .then(data => setProductos(data))
+
+    //cargar categorias
+    fetch('http://localhost:8080/api/categorias', {
+      method : 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type' : 'application/json'
+      }
+    })
+    .then(Response => Response.json())
+    .then(data => setCategorias(data));
+    
+    //cargar proveedores
+    fetch('http://localhost:8080/api/proveedores', {
+      method : 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type' : 'application/json'
+      }
+    })
+    .then(Response => Response.json())
+    .then(data => setProveedores(data));
+
   },[])
+
+  function navLinkStyle({ isActive }){
+    return ` w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 mb-2 ${
+      isActive
+      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200 bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
+      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+    }`
+  }
 
   return (
     <div className="flex h-screen bg-slate-100">
@@ -56,27 +125,30 @@ export function LayoutDashboard() {
         </div>
         
         <nav className="flex-1 space-y-1">
-          <Link to={'/dashboard'}>
-            <SidebarItem icon={iconLayoutDashboard} label="Resumen" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-          </Link>
-          <Link to={'/dashboard/ventas'}>
-            <SidebarItem icon={ShoppingCart} label="Ventas" active={activeTab === 'ventas'} onClick={() => setActiveTab('ventas')} />
-          </Link>
-          <Link to={'/dashboard/inventario'}>
-            <SidebarItem icon={Package} label="Inventario" active={activeTab === 'inventario'} onClick={() => setActiveTab('inventario')} />
-          </Link>
-          <Link to={'/dashboard/compras'}>
-            <SidebarItem icon={Truck} label="Compras" active={activeTab === 'compras'} onClick={() => setActiveTab('compras')} />
-          </Link>
-          <Link to={'/dashboard/reportes'}>
-            <SidebarItem icon={BarChart3} label="Reportes" active={activeTab === 'reportes'} onClick={() => setActiveTab('reportes')} />
-          </Link>
+          <NavLink to={'/dashboard'} className={navLinkStyle} end>
+            <SidebarItem icon={iconLayoutDashboard} label="Resumen"  />
+          </NavLink>
+          <NavLink to={'/dashboard/ventas'} className={navLinkStyle}>
+            <SidebarItem icon={ShoppingCart} label="Ventas" />
+          </NavLink>
+          <NavLink to={'/dashboard/inventario'} className={navLinkStyle}>
+            <SidebarItem icon={Package} label="Inventario" />
+          </NavLink>
+          <NavLink to={'/dashboard/compras'} className={navLinkStyle}>
+            <SidebarItem icon={Truck} label="Compras" />
+          </NavLink>
+          <NavLink to={'/dashboard/contactos'} className={navLinkStyle}>
+            <SidebarItem icon={Users} label="Contactos" />
+          </NavLink>
+          <NavLink to={'/dashboard/reportes'} className={navLinkStyle}>
+            <SidebarItem icon={BarChart3} label="Reportes" />
+          </NavLink>
         </nav>
 
         <div className="mt-auto pt-6 border-t border-slate-100">
-          <Link to={'/dashboard/ajustes'}>
-            <SidebarItem icon={Settings} label="Mi Tienda" active={activeTab === 'config'} onClick={() => setActiveTab('config')} />
-          </Link>
+          <NavLink to={'/dashboard/ajustes'} className={navLinkStyle}>
+            <SidebarItem icon={Settings} label="Mi Tienda" active={activeTab}/>
+          </NavLink>
           <button onClick={handleLogout} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-rose-500 hover:bg-rose-50 transition-all mt-2">
             <History size={20} />
             <span className="font-medium text-sm">Cerrar Sesión</span>
@@ -88,8 +160,8 @@ export function LayoutDashboard() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10">
           <div className="flex items-center space-x-4">
-             {/* <h2 className="font-bold text-slate-800">Bodega {`${empresa.nombreComercial}`}</h2> */}
-             {/* <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">{`${empresa.estado}`}</span> */}
+             <h2 className="font-bold text-slate-800">Bodega {`${empresa.nombreComercial}`}</h2>
+             <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">{`${empresa.estado}`}</span>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -105,8 +177,17 @@ export function LayoutDashboard() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-8">
-          {/* AQUÍ ES DONDE SE RENDERIZA EL DASHBOARD, LAS VENTAS, ETC. */}
-          <Outlet /> 
+          <Outlet context={{
+            productos,
+            setProductos,
+            categorias,
+            setCategorias,
+            proveedores,
+            setProveedores,
+            empresa,
+            setEmpresa,
+            addProveedor,
+            }}/> 
         </div>
       </main>
     </div>
