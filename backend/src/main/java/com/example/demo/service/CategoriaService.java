@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Categoria;
+import com.example.demo.exception.NotFoundException;
 import com.example.demo.model.Empresa;
 import com.example.demo.repository.CategoriaRepository;
 import com.example.demo.repository.EmpresaRepository;
@@ -19,8 +20,9 @@ public class CategoriaService {
 
     public Categoria crearConEmpresa(Categoria categoria, Integer empresaId) {
         Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                .orElseThrow(() -> new NotFoundException("Empresa no encontrada"));
 
+        categoria.setId(null);
         categoria.setEmpresa(empresa);
         return categoriaRepository.save(categoria);
     }
@@ -30,6 +32,9 @@ public class CategoriaService {
                 .map(existente -> {
                     existente.setNombre(actualizada.getNombre());
                     existente.setDescripcion(actualizada.getDescripcion());
+                    if (actualizada.getVisibleTienda() != null) {
+                        existente.setVisibleTienda(actualizada.getVisibleTienda());
+                    }
                     return categoriaRepository.save(existente);
                 })
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada en su empresa"));

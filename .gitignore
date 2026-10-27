@@ -1,0 +1,39 @@
+# ---------- NUNCA subir: secretos de entorno ----------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+keystore.jks
+
+# ---------- Dependencias y builds ----------
+node_modules/
+target/
+dist/
+build/
+.mvn/wrapper/maven-wrapper.jar
+
+# ---------- Logs y salidas de consola ----------
+*.log
+logs/
+*-out*.txt
+*-err*.txt
+*-build.txt
+vite-build.txt
+saas-backend.log
+META-INF/
+HELP.md
+
+# ---------- IDE / herramientas ----------
+.vscode/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+opencode.json
+
+# ---------- Sistema ----------
+Thumbs.db
+Desktop.ini
+.DS_Store

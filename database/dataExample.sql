@@ -8,9 +8,9 @@ INSERT INTO rol (nombre, descripcion) VALUES
 INSERT INTO empresa (ruc, nombre_comercial, telefono) VALUES 
 ( '12345678912','TechStore Peru',  '999888777');
 
--- C) Crear Usuario Admin para TechStore
+-- C) Crear Usuario Admin para TechStore (contraseña: 12345678, encriptada con BCrypt)
 INSERT INTO usuario (empresa_id, nombre, correo, contrasena, rol_id, dni) VALUES 
-(1, 'Carlos Admin', 'admin@techstore.pe', 'secret123', 1, 12345678);
+(1, 'Carlos Admin', 'admin@techstore.pe', '$2b$10$RvK3FZA2pmdvyf8kXthoBO86g.VMV0BP7ut9pGAqxJacsaOU1DYDC', 1, 12345678);
 
 -- D) Crear Categoría y Producto
 INSERT INTO categoria (empresa_id, nombre) VALUES (1, 'Laptops');

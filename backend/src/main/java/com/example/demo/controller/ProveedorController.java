@@ -4,6 +4,7 @@ import com.example.demo.model.Proveedor;
 import com.example.demo.service.JwtService;
 import com.example.demo.service.ProveedorService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class ProveedorController {
     private final JwtService jwtService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public Proveedor guardar(@RequestBody Proveedor proveedor,
                              @RequestHeader("Authorization") String token) {
 
@@ -25,6 +27,7 @@ public class ProveedorController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public Proveedor actualizar(@PathVariable Integer id,
                                 @RequestBody Proveedor proveedor,
                                 @RequestHeader("Authorization") String token) {
@@ -40,6 +43,13 @@ public class ProveedorController {
         return proveedorService.listarPorEmpresa(empresaId);
     }
 
+    // El SUPREMO puede ver los proveedores de cualquier empresa
+    @GetMapping("/empresa/{empresaId}")
+    @PreAuthorize("hasRole('SUPREMO')")
+    public List<Proveedor> listarPorEmpresaId(@PathVariable Integer empresaId) {
+        return proveedorService.listarPorEmpresa(empresaId);
+    }
+
     @GetMapping("/{id}")
     public Proveedor buscar(@PathVariable Integer id,
                             @RequestHeader("Authorization") String token) {
@@ -49,6 +59,7 @@ public class ProveedorController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public void eliminar(@PathVariable Integer id,
                          @RequestHeader("Authorization") String token) {
 

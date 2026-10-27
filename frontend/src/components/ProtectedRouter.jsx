@@ -1,10 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
+import { getToken, isTokenExpired } from "../api";
 
 export function ProtectedRouter(){
 
-  const user = localStorage.getItem('token-user')
+  const user = getToken()
 
-  if (!user){
+  if (!user || isTokenExpired()){
     return <Navigate to="/login" />
   }
 

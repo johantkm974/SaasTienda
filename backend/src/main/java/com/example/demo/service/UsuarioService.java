@@ -1,8 +1,12 @@
 package com.example.demo.service;
 
+import com.example.demo.model.Empresa;
+import com.example.demo.exception.NotFoundException;
 import com.example.demo.model.Usuario;
+import com.example.demo.repository.EmpresaRepository;
 import com.example.demo.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,42 +16,80 @@ import java.util.List;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final EmpresaRepository empresaRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public Usuario crear(Usuario usuario) {
+    public Usuario crear(Usuario usuario, Integer empresaId) {
+
+        usuario.setId(null);
+        if (usuario.getIntentosFallidos() == null) {
+            usuario.setIntentosFallidos(0);
+        }
+
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new NotFoundException("Empresa no encontrada"));
+
+        usuario.setEmpresa(empresa);
 
         usuarioRepository
-                .findByCorreoAndEmpresaId(usuario.getCorreo(), usuario.getEmpresa().getId())
+                .findByCorreoAndEmpresaId(usuario.getCorreo(), empresaId)
                 .ifPresent(u -> {
                     throw new RuntimeException("Correo ya registrado en esta empresa");
                 });
 
+        if (usuario.getContrasena() == null || usuario.getContrasena().isEmpty()) {
+            throw new RuntimeException("La contraseña es obligatoria");
+        }
+        usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
+
         return usuarioRepository.save(usuario);
     }
-    public Usuario actualizar(Integer id,Usuario usuarioActualizado){
-        return usuarioRepository.findById(id).map(usuarioExistente ->{
-                usuarioExistente.setNombre(usuarioActualizado.getNombre());
-                usuarioExistente.setDni(usuarioActualizado.getDni());
-                usuarioExistente.setCorreo(usuarioActualizado.getCorreo());
-                usuarioExistente.setContrasena(usuarioActualizado.getContrasena());
 
-                usuarioExistente.setEmpresa(usuarioActualizado.getEmpresa());
-                usuarioExistente.setRol(usuarioActualizado.getRol());
+    public Usuario actualizar(Integer id, Usuario usuarioActualizado, Integer empresaId) {
 
-                return usuarioRepository.save(usuarioExistente);
+        return usuarioRepository.findByIdAndEmpresaId(id, empresaId)
+                .map(usuarioExistente -> {
 
-        })
-        .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el ID: " + id));
-    }
-    public List<Usuario>listarTodos(){
-        return usuarioRepository.findAll();
+                    if (usuarioActualizado.getNombre() != null) {
+                        usuarioExistente.setNombre(usuarioActualizado.getNombre());
+                    }
+                    if (usuarioActualizado.getDni() != null) {
+                        usuarioExistente.setDni(usuarioActualizado.getDni());
+                    }
+                    if (usuarioActualizado.getCorreo() != null) {
+                        usuarioRepository
+                                .findByCorreoAndEmpresaId(usuarioActualizado.getCorreo(), empresaId)
+                                .filter(u -> !u.getId().equals(id))
+                                .ifPresent(u -> {
+                                    throw new RuntimeException("Correo ya registrado en esta empresa");
+                                });
+                        usuarioExistente.setCorreo(usuarioActualizado.getCorreo());
+                    }
+                    if (usuarioActualizado.getContrasena() != null && !usuarioActualizado.getContrasena().isEmpty()) {
+                        usuarioExistente.setContrasena(passwordEncoder.encode(usuarioActualizado.getContrasena()));
+                    }
+                    if (usuarioActualizado.getRol() != null && usuarioActualizado.getRol().getId() != null) {
+                        usuarioExistente.setRol(usuarioActualizado.getRol());
+                    }
+
+                    return usuarioRepository.save(usuarioExistente);
+                })
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado en su empresa"));
     }
 
     public List<Usuario> listarPorEmpresa(Integer empresaId) {
         return usuarioRepository.findByEmpresaId(empresaId);
     }
 
-    public void eliminar(Integer id) {
-        usuarioRepository.deleteById(id);
+    public List<Usuario> listarTodos() {
+        return usuarioRepository.findAll();
+    }
+
+    public void eliminar(Integer id, Integer empresaId) {
+
+        Usuario usuario = usuarioRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado en su empresa"));
+
+        usuarioRepository.delete(usuario);
     }
 }
-

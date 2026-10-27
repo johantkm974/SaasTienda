@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tienda Electronicos</title>
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="whatsapp-float.css">
+  <link rel="stylesheet" href="tienda.css">
+</head>
+<body>
+  <header class="navbar">
+    <a class="logo" href="inicio.html">SV</a>
+    <nav class="nav-links">
+      <a class="nav-link" href="inicio.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        INICIO
+      </a>
+      <a class="nav-link" href="productos.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        PRODUCTOS
+      </a>
+      <a class="nav-link" href="nosotros.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        NOSOTROS
+      </a>
+      <a class="nav-link" href="contactanos.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        CONTACTO
+      </a>
+    </nav>
+    <div class="header-actions">
+      <a class="action-link" href="index.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Panel
+      </a>
+      <button class="action-link" id="ordersBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        Mis compras
+      </button>
+      <button class="action-link" id="accountBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        Ingresar
+      </button>
+      <button class="action-link logout-btn" id="logoutBtn" type="button" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        Salir
+      </button>
+    </div>
+  </header>
+
+  <section class="hero" id="tiendaHero">
+    <div class="hero-content">
+      <p class="eyebrow" id="tiendaEyebrow">Compra online</p>
+      <h1 id="tiendaTitulo">Componentes listos para tu siguiente equipo</h1>
+      <p id="tiendaSubtitulo">Catalogo activo, carrito mejorado con persistencia y checkout conectado al backend de ventas.</p>
+      <a href="#catalogo" class="btn-shop" id="tiendaBtn">VER CATALOGO</a>
+    </div>
+  </section>
+
+  <main class="store-shell" id="catalogo">
+    <section class="layout">
+      <div class="catalog-panel">
+        <div class="section-head">
+          <div>
+            <h2>Catalogo</h2>
+            <span id="catalogStatus">Cargando productos...</span>
+          </div>
+          <input id="searchInput" class="search" type="search" placeholder="Buscar producto">
+        </div>
+        <div class="filter-tags" id="filterTags">
+          <button class="filter-tag active" data-category="all">Todos</button>
+        </div>
+        <div class="product-scroll">
+          <div class="product-grid" id="productGrid"></div>
+        </div>
+      </div>
+
+      <aside class="cart-panel">
+        <div class="cart-panel-header">
+          <h2>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="m1 1 4 2 3 9h13l3-11H6"></path>
+            </svg>
+            Carrito
+            <span id="cartCount" class="cart-count-label"></span>
+          </h2>
+          <button class="clear-cart-btn" type="button" onclick="clearCart()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Vaciar
+          </button>
+        </div>
+
+        <div class="cart-items" id="cartItems"></div>
+
+        <div class="cart-summary">
+          <div class="summary-row muted">
+            <span>Subtotal</span>
+            <strong id="cartSubtotal">S/ 0.00</strong>
+          </div>
+          <div class="summary-row muted">
+            <span>Envio (calculado al confirmar)</span>
+            <strong id="cartShipping">--</strong>
+          </div>
+          <div class="summary-row total">
+            <span>Total</span>
+            <span class="total-price" id="cartTotal">S/ 0.00</span>
+          </div>
+        </div>
+
+        <div class="cart-panel-footer">
+          <form class="checkout-form" id="checkoutForm">
+            <label>Nombres<input name="nombres" required placeholder="Juan"></label>
+            <label>Apellidos<input name="apellidos" placeholder="Perez"></label>
+            <label>Correo<input name="correo" type="email" required placeholder="tu@correo.com"></label>
+            <label>Telefono<input name="telefono" placeholder="999 888 777"></label>
+            <label>Direccion de entrega<input name="direccionEntrega" required placeholder="Av. Principal 123"></label>
+            <label>Distrito<input name="distrito" required value="Lima"></label>
+            <button class="primary-btn" type="submit" id="checkoutBtn">Confirmar compra</button>
+          </form>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand-icon">SV</div>
+        <p id="footerMarcaTexto">Tu tienda de confianza para componentes electrónicos. Ofrecemos los mejores productos con garantía y soporte.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="inicio.html">Inicio</a></li>
+          <li><a href="productos.html">Productos</a></li>
+          <li><a href="nosotros.html">Nosotros</a></li>
+          <li><a href="contactanos.html">Contacto</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Servicio</h4>
+        <ul>
+          <li><a href="tienda.html">Tienda Online</a></li>
+          <li><a href="#">Mis pedidos</a></li>
+          <li><a href="#">Garantías</a></li>
+          <li><a href="#">Devoluciones</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a id="footerTelefono" href="tel:+51999888777">+51 999 888 777</a></li>
+          <li><a id="footerCorreo" href="mailto:ventas@svelectronicos.com">ventas@svelectronicos.com</a></li>
+          <li><a id="footerDireccion" href="#">Lima, Perú</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 SV Electrónicos. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <dialog class="modal" id="authModal">
+    <form class="auth-box" id="authForm">
+      <div class="modal-head">
+        <h2 id="authTitle">Ingresar como cliente</h2>
+        <button class="icon-btn" type="button" id="closeAuthBtn">x</button>
+      </div>
+      <div class="tabs">
+        <button class="tab active" type="button" data-mode="login">Login</button>
+        <button class="tab" type="button" data-mode="registro">Registro</button>
+      </div>
+      <div class="register-fields" id="registerFields">
+        <label>Nombres<input name="nombres"></label>
+        <label>Apellidos<input name="apellidos"></label>
+        <label>Telefono<input name="telefono"></label>
+        <label>Direccion<input name="direccion"></label>
+      </div>
+      <label>Correo<input name="correo" type="email" required value="cliente@ventas.com"></label>
+      <label>Contrasena<input name="contrasena" type="password" required value="123456"></label>
+      <button class="primary-btn" type="submit">Continuar</button>
+    </form>
+  </dialog>
+
+  <dialog class="modal" id="ordersModal">
+    <section class="auth-box">
+      <div class="modal-head">
+        <h2>Mis compras</h2>
+        <button class="icon-btn" type="button" id="closeOrdersBtn">x</button>
+      </div>
+      <div class="orders-search">
+        <input id="ordersEmailInput" type="email" placeholder="tu@correo.com">
+        <button class="primary-btn" type="button" id="ordersEmailBtn">Buscar</button>
+      </div>
+      <div class="orders-list" id="ordersList"></div>
+    </section>
+  </dialog>
+
+  <div class="toast" id="toast"></div>
+  <script src="tienda.js"></script>
+  <script src="footer.js?v=2"></script>
+  <script src="whatsapp-float.js"></script>
+</body>
+</html>

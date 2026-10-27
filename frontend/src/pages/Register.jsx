@@ -10,6 +10,7 @@ import {
   FileText,
   Phone
 } from 'lucide-react';
+import { apiFetch } from '../api';
 
 export function Register(){
 
@@ -20,29 +21,29 @@ export function Register(){
   const [nombreUsuario, setNombreUsuario] = useState('')
   const [dni, setDni] = useState('')
   const [password, setPassword] = useState('')
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState('')
+  const [erroresCampo, setErroresCampo] = useState({})
   const navigate = useNavigate();
 
    async function registerUser(e){
     e.preventDefault()
+    setError('');
 
     try {
-      const response = await fetch("http://localhost:8080/api/auth/registro",{
+      setCargando(true);
+      await apiFetch('/auth/registro',{
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({nombreEmpresa,ruc,telefono,correo,nombreUsuario,dni,password})
-      })
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      }
+      });
 
-      console.log("Registro exitoso", response);
       navigate('/login');
 
     } catch (error) {
-      console.error(error);
-      alert("Error al registrar: " + error.message);
+      setError(error.message || 'No se pudo registrar el negocio');
+      setErroresCampo(error.fieldErrors || {});
+    } finally {
+      setCargando(false);
     }
   }
 
@@ -80,7 +81,9 @@ export function Register(){
             <div className="relative">
               <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              maxLength={11}
               placeholder="10XXXXXXXXX"
               className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
               onChange={(e)=>setRuc(e.target.value)}
@@ -108,7 +111,9 @@ export function Register(){
             <div className="relative">
               <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
-              type="number"
+              type="text"
+              inputMode="numeric"
+              maxLength={8}
               placeholder="DNI (8 dígitos)" 
               className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
               onChange={(e)=>setDni(e.target.value)}
@@ -122,7 +127,9 @@ export function Register(){
             <div className="relative">
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              maxLength={9}
               placeholder="999 999 999"
               className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
               onChange={(e)=>setTelefono(e.target.value)}
@@ -160,9 +167,20 @@ export function Register(){
             </div>
           </div>
 
+          {error && (
+            <div className="md:col-span-2 bg-rose-50 text-rose-600 px-4 py-3 rounded-2xl text-sm font-bold border border-rose-100">
+              {error}
+            </div>
+          )}
+          {Object.entries(erroresCampo).map(([campo, msg]) => (
+            <p key={campo} className="md:col-span-2 text-xs font-bold text-rose-500 -mt-3">
+              {campo}: {msg}
+            </p>
+          ))}
+
           <div className="md:col-span-2 pt-4">
-            <button type="submit" className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-[0.98]">
-              Crear mi Cuenta de Negocio
+            <button type="submit" disabled={cargando} className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-[0.98] disabled:opacity-50">
+              {cargando ? 'Creando cuenta...' : 'Crear mi Cuenta de Negocio'}
             </button>
           </div>
         </form>

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState  } from 'react';
+import { apiFetch, getRolFromToken, setToken } from '../api';
 
 import { 
   Mail,
@@ -11,35 +12,31 @@ import {
 export function Login(){
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   async function handleLogin(e){
     e.preventDefault()
+    setError('');
 
     try {
-      const response = await fetch('http://localhost:8080/auth/login', {
+      setCargando(true);
+      const usuario = await apiFetch('/auth/login', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ 
           correo: correo,       
           contrasena: password  
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || 'Credenciales incorrectas');
-      }
-
-      const usuario = await response.json();
-      localStorage.setItem('token-user', JSON.stringify(usuario.token))
-      
-      console.log('Login exitoso:', usuario);
+      setToken(usuario.token);
       navigate('/dashboard')
 
     } catch (error) {
-      // console.error("Error capturado:", error);
-      alert("Error al entrar: " + error.message);
+      setError(error.message || 'No se pudo iniciar sesión');
+    } finally {
+      setCargando(false);
     }
   }
 
@@ -52,16 +49,22 @@ export function Login(){
         </Link>
 
         <div className="text-center mb-10">
-          <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center text-white font-bold mx-auto mb-4 shadow-lg shadow-emerald-100">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold mx-auto mb-4 shadow-lg bg-emerald-600 shadow-emerald-100">
             <Store size={28} />
           </div>
-          <h2 className="text-2xl font-black text-slate-900">Ingreso de Negocio</h2>
-          <p className="text-slate-500 text-sm mt-2 font-medium">Gestiona tu tienda ahora</p>
+          <h2 className="text-2xl font-black text-slate-900">
+            Ingreso de Negocio
+          </h2>
+          <p className="text-slate-500 text-sm mt-2 font-medium">
+            Gestiona tu tienda ahora
+          </p>
         </div>
 
         <form className="space-y-5" onSubmit={handleLogin}>
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email del Dueño</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+              Email del Dueño
+            </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
@@ -88,8 +91,14 @@ export function Login(){
             </div>
           </div>
 
-          <button type="submit" className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-[0.98] mt-4">
-            Entrar a mi Panel
+          {error && (
+            <div className="bg-rose-50 text-rose-600 px-4 py-3 rounded-2xl text-sm font-bold border border-rose-100">
+              {error}
+            </div>
+          )}
+
+          <button type="submit" disabled={cargando} className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-[0.98] mt-4 disabled:opacity-50">
+            {cargando ? 'Ingresando...' : 'Entrar a mi Panel'}
           </button>
         </form>
         

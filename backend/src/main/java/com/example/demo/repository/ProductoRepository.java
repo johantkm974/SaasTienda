@@ -1,14 +1,28 @@
 package com.example.demo.repository;
 import com.example.demo.model.*;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.*;
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Integer> {
     List<Producto> findByEmpresaId(Integer empresaId);
-    // Para validar stock antes de vender
     Optional<Producto> findByIdAndEmpresaId(Integer id, Integer empresaId);
-    List<Producto> findByEmpresaIdAndStockActualLessThanEqual(
-        Integer empresaId, Integer stockMinimo);
+
+    @Modifying
+    @Query("UPDATE Producto p SET p.stockActual = p.stockActual - :cantidad " +
+            "WHERE p.id = :id AND p.empresa.id = :empresaId AND p.stockActual >= :cantidad")
+    int decrementarStock(@Param("id") Integer id,
+                         @Param("empresaId") Integer empresaId,
+                         @Param("cantidad") Integer cantidad);
+
+    @Modifying
+    @Query("UPDATE Producto p SET p.stockActual = p.stockActual + :cantidad " +
+            "WHERE p.id = :id AND p.empresa.id = :empresaId")
+    int incrementarStock(@Param("id") Integer id,
+                         @Param("empresaId") Integer empresaId,
+                         @Param("cantidad") Integer cantidad);
 }

@@ -4,13 +4,16 @@ import java.math.BigDecimal;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SoftDelete;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@SoftDelete(columnName = "eliminado")
 @Entity
 @Table(name = "producto")
-public class Producto {
+public class Producto extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -38,6 +41,15 @@ public class Producto {
 
     @Column(name = "imagen_url")
     private String imagenUrl;
+
+    @Column(name = "codigo_sku", length = 50)
+    private String codigoSku;
+
+    @Column(length = 100)
+    private String marca;
+
+    @Column(nullable = false)
+    private Boolean destacado = false;
 
     @Transient
     private BigDecimal costoUnitario;

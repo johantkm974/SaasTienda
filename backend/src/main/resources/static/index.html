@@ -1,18 +1,474 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Inicio - Tienda SaaS</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; }
-        .btn { padding: 15px 30px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-size: 18px; }
-        .btn:hover { background-color: #0056b3; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema de Ventas Electronicos</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Bienvenido a tu Sistema SaaS</h1>
-    <p>Selecciona una opción:</p>
-    <br>
-    <a href="/html/producto.html" class="btn">📦 Gestionar Productos</a>
+  <section class="auth-screen" id="loginScreen">
+    <form class="login-panel" id="loginForm">
+      <span class="brand-mark">SV</span>
+      <h1 id="loginTitle">Iniciar sesion</h1>
+      <p id="loginSubtitle">Accede al sistema con JWT para gestionar ventas, inventario y envios.</p>
+      <label>Correo<input name="correo" type="email" required value="admin@ventas.com"></label>
+      <label>Contrasena<input name="contrasena" type="password" required value="123456"></label>
+      <button class="primary-btn" type="submit" id="loginBtn">Ingresar</button>
+    </form>
+  </section>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">SV</span>
+      <div>
+        <strong>Ventas Electronicos</strong>
+        <small>Inventario, ventas y envios</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-view="dashboard">Panel</button>
+      <button class="nav-item" data-view="productos">Productos</button>
+      <button class="nav-item" data-view="ventas">Ventas</button>
+      <button class="nav-item" data-view="clientes">Clientes</button>
+      <button class="nav-item" data-view="envios">Envios</button>
+      <button class="nav-item" data-view="usuarios">Usuarios</button>
+      <button class="nav-item" data-view="categorias">Categorias</button>
+      <button class="nav-item" data-view="banners">Banners</button>
+      <button class="nav-item" data-view="contenido">Contenido</button>
+    </nav>
+  </aside>
+
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <h1>Panel de control</h1>
+        <p>Gestion comercial conectada a Spring Boot y MySQL.</p>
+      </div>
+      <div class="top-actions">
+        <span class="status-pill" id="statusText">Cargando datos...</span>
+        <a class="ghost-btn text-link" href="tienda.html">Tienda cliente</a>
+        <button class="ghost-btn" id="logoutBtn">Salir</button>
+        <button class="primary-btn" id="refreshBtn">Actualizar</button>
+      </div>
+    </header>
+
+    <section class="metrics" id="metrics"></section>
+
+    <section class="view active" id="dashboard">
+      <div class="section-title">
+        <div>
+          <h2>Resumen operativo</h2>
+          <span>Vista general de ventas, inventario y entregas.</span>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Productos destacados</h3>
+            <button class="ghost-btn" data-go="productos">Ver catalogo</button>
+          </div>
+          <div class="product-list" id="featuredProducts"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Ultimas ventas</h3>
+            <button class="ghost-btn" data-go="ventas">Ver ventas</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Cliente</th>
+                  <th>Estado</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="latestSales"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="productos">
+      <div class="section-title">
+        <div>
+          <h2>Productos</h2>
+          <span>Catalogo activo, precios y control de stock.</span>
+        </div>
+        <input class="search" id="productSearch" type="search" placeholder="Buscar producto o SKU">
+      </div>
+
+      <div class="work-grid">
+        <form class="form-panel" id="productForm">
+          <h3 id="productFormTitle">Nuevo producto</h3>
+          <input type="hidden" name="idProducto">
+          <label>Categoria<select name="categoria" id="productCategory" required></select></label>
+          <label>SKU<input name="codigoSku" required placeholder="RTX5070-001"></label>
+          <label>Nombre<input name="nombre" required placeholder="RTX 5070 Ti"></label>
+          <label>Marca<input name="marca" placeholder="NVIDIA"></label>
+          <label>Precio<input name="precio" type="number" step="0.01" min="0" required></label>
+          <label>Stock<input name="stock" type="number" min="0" required></label>
+          <label class="span-2">Imagen URL<input name="imagen" placeholder="https://..."></label>
+          <label class="span-2">Descripcion<textarea name="descripcion" rows="3"></textarea></label>
+          <div class="form-actions span-2">
+            <button class="primary-btn" id="productSubmitBtn" type="submit">Guardar producto</button>
+            <button class="ghost-btn hidden" id="cancelProductEditBtn" type="button">Cancelar edicion</button>
+          </div>
+        </form>
+
+        <div class="cards-grid" id="productCards"></div>
+      </div>
+    </section>
+
+    <section class="view" id="ventas">
+      <div class="section-title">
+        <div>
+          <h2>Ventas</h2>
+          <span>Registro de pedidos y estados de pago.</span>
+        </div>
+      </div>
+
+      <div class="work-grid">
+        <form class="form-panel compact" id="saleForm">
+          <h3>Nueva venta</h3>
+          <label>Cliente<select name="cliente" id="saleClient" required></select></label>
+          <label>Vendedor<select name="vendedor" id="saleSeller" required></select></label>
+          <label>Total<input name="total" type="number" step="0.01" min="0" required></label>
+          <label>Estado
+            <select name="estado">
+              <option>PENDIENTE</option>
+              <option>PAGADA</option>
+              <option>CANCELADA</option>
+            </select>
+          </label>
+          <button class="primary-btn" type="submit">Registrar venta</button>
+        </form>
+
+        <div class="panel table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Total</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="salesRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="clientes">
+      <div class="section-title">
+        <div>
+          <h2>Clientes</h2>
+          <span>Compradores, contacto e historial comercial.</span>
+        </div>
+      </div>
+
+      <div class="work-grid">
+        <form class="form-panel" id="clientForm">
+          <h3>Nuevo cliente</h3>
+          <label>Nombres<input name="nombres" required></label>
+          <label>Apellidos<input name="apellidos" required></label>
+          <label>Correo<input name="correo" type="email" required></label>
+          <label>Telefono<input name="telefono"></label>
+          <label class="span-2">Direccion<input name="direccion"></label>
+          <button class="primary-btn span-2" type="submit">Guardar cliente</button>
+        </form>
+
+        <div class="panel table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Telefono</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="clientRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="envios">
+      <div class="section-title">
+        <div>
+          <h2>Envios</h2>
+          <span>Preparacion, ruta y entregas.</span>
+        </div>
+      </div>
+
+      <div class="work-grid">
+        <form class="form-panel compact" id="shippingForm">
+          <h3>Nuevo envio</h3>
+          <label>Venta<select name="venta" id="shippingSale" required></select></label>
+          <label>Distrito<input name="distrito" required placeholder="Lima"></label>
+          <label>Direccion<input name="direccionEntrega" required placeholder="Av. Principal 123"></label>
+          <label>Costo<input name="costoEnvio" type="number" step="0.01" min="0" required></label>
+          <label>Estado
+            <select name="estadoEnvio">
+              <option>PREPARACION</option>
+              <option>EN CAMINO</option>
+              <option>ENTREGADO</option>
+              <option>CANCELADO</option>
+            </select>
+          </label>
+          <button class="primary-btn" type="submit">Registrar envio</button>
+        </form>
+
+        <div class="panel table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Venta</th>
+                <th>Direccion</th>
+                <th>Distrito</th>
+                <th>Estado</th>
+                <th>Costo</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="shippingRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="usuarios">
+      <div class="section-title">
+        <div>
+          <h2>Usuarios</h2>
+          <span>Administradores, vendedores y estado de cuenta.</span>
+        </div>
+      </div>
+
+      <div class="work-grid">
+        <form class="form-panel" id="userForm">
+          <h3>Nuevo usuario</h3>
+          <label>Rol<select name="rol" id="userRole" required></select></label>
+          <label>Nombres<input name="nombres" required></label>
+          <label>Apellidos<input name="apellidos" required></label>
+          <label>Correo<input name="correo" type="email" required></label>
+          <label>Telefono<input name="telefono"></label>
+          <label>Contrasena<input name="contrasena" type="password" required></label>
+          <button class="primary-btn span-2" type="submit">Guardar usuario</button>
+        </form>
+
+        <div class="panel table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="categorias">
+      <div class="section-title">
+        <div>
+          <h2>Categorias</h2>
+          <span>Organizacion del almacen y catalogo.</span>
+        </div>
+      </div>
+
+      <div class="work-grid">
+        <form class="form-panel compact" id="categoryForm">
+          <h3 id="categoryFormTitle">Nueva categoria</h3>
+          <input type="hidden" name="idCategoria">
+          <label>Nombre<input name="nombre" required placeholder="Tarjetas graficas"></label>
+          <label>Descripcion<textarea name="descripcion" rows="4"></textarea></label>
+          <label>Imagen URL<input name="imagenUrl" placeholder="https://..."></label>
+          <label>O subir imagen<input type="file" id="categoryImageFile" accept="image/*"></label>
+          <div id="categoryImagePreview" style="margin:8px 0"></div>
+          <label>Orden<input name="orden" type="number" min="0" value="0"></label>
+          <div class="form-actions">
+            <button class="primary-btn" id="categorySubmitBtn" type="submit">Guardar categoria</button>
+            <button class="ghost-btn hidden" id="cancelCategoryEditBtn" type="button">Cancelar edicion</button>
+          </div>
+        </form>
+
+        <div class="panel table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Descripcion</th>
+                <th>Orden</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="categoryRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="banners">
+      <div class="section-title">
+        <div>
+          <h2>Banners</h2>
+          <span>Gestion de banners del carousel principal.</span>
+        </div>
+      </div>
+
+      <div class="work-grid">
+        <form class="form-panel" id="bannerForm">
+          <h3 id="bannerFormTitle">Nuevo banner</h3>
+          <input type="hidden" name="idBanner">
+          <label>Titulo<input name="titulo" required placeholder="Ofertas de temporada"></label>
+          <label>Subtitulo<input name="subtitulo" placeholder="Tarjetas Graficas de ultima generacion"></label>
+          <label class="span-2">Descripcion<textarea name="descripcion" rows="2"></textarea></label>
+          <label class="span-2">Imagen URL<input name="imagenUrl" placeholder="https://..."></label>
+          <label class="span-2">O subir imagen<input type="file" id="bannerImageFile" accept="image/*"></label>
+          <div id="bannerImagePreview" class="span-2" style="margin:8px 0"></div>
+          <label>Enlace<input name="enlace" placeholder="productos.html"></label>
+          <label>Orden<input name="orden" type="number" min="0" value="0"></label>
+          <label>Pagina
+            <select name="pagina">
+              <option value="home">Inicio (inicio.html)</option>
+              <option value="tienda">Tienda (tienda.html)</option>
+            </select>
+          </label>
+          <label>Activo
+            <select name="activo">
+              <option value="SI">SI</option>
+              <option value="NO">NO</option>
+            </select>
+          </label>
+          <div class="form-actions span-2">
+            <button class="primary-btn" id="bannerSubmitBtn" type="submit">Guardar banner</button>
+            <button class="ghost-btn hidden" id="cancelBannerEditBtn" type="button">Cancelar edicion</button>
+          </div>
+        </form>
+
+        <div class="panel table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Pagina</th>
+                <th>Titulo</th>
+                <th>Subtitulo</th>
+                <th>Orden</th>
+                <th>Activo</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="bannerRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="contenido">
+      <div class="section-title">
+        <div>
+          <h2>Contenido</h2>
+          <span>Textos y valores dinamicos por vista.</span>
+        </div>
+        <select class="search" id="contenidoVistaFilter" style="width: auto;">
+          <option value="">Todas las vistas</option>
+          <option value="home">Home</option>
+          <option value="tienda">Tienda</option>
+          <option value="login">Login</option>
+          <option value="productos">Productos</option>
+          <option value="nosotros">Nosotros</option>
+          <option value="contactanos">Contacto</option>
+          <option value="footer">Footer</option>
+        </select>
+      </div>
+
+      <div class="work-grid">
+        <form class="form-panel" id="contenidoForm">
+          <h3 id="contenidoFormTitle">Nuevo contenido</h3>
+          <input type="hidden" name="idContenido">
+          <label>Vista
+            <select name="vista" required>
+              <option value="home">Home</option>
+              <option value="tienda">Tienda</option>
+              <option value="login">Login</option>
+              <option value="productos">Productos</option>
+              <option value="nosotros">Nosotros</option>
+              <option value="contactanos">Contacto</option>
+              <option value="footer">Footer</option>
+            </select>
+          </label>
+          <label>Clave<input name="clave" required placeholder="titulo_principal"></label>
+          <label class="span-2">Valor texto<textarea name="valorTexto" rows="3"></textarea></label>
+          <label class="span-2">Imagen URL<input name="imagenUrl" placeholder="https://..."></label>
+          <label>Activo
+            <select name="activo">
+              <option value="SI">SI</option>
+              <option value="NO">NO</option>
+            </select>
+          </label>
+          <div class="form-actions span-2">
+            <button class="primary-btn" id="contenidoSubmitBtn" type="submit">Guardar contenido</button>
+            <button class="ghost-btn hidden" id="cancelContenidoEditBtn" type="button">Cancelar edicion</button>
+          </div>
+        </form>
+
+        <div class="panel table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Vista</th>
+                <th>Clave</th>
+                <th>Valor</th>
+                <th>Activo</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="contenidoRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+  <script>
+    async function loadLoginContent() {
+      try {
+        const res = await fetch('/api/contenido/login');
+        if (!res.ok) return;
+        const c = await res.json();
+        if (c.titulo) document.getElementById('loginTitle').textContent = c.titulo;
+        if (c.subtitulo) document.getElementById('loginSubtitle').textContent = c.subtitulo;
+        if (c.texto_boton) document.getElementById('loginBtn').textContent = c.texto_boton;
+      } catch(e) {}
+    }
+    loadLoginContent();
+  </script>
 </body>
 </html>

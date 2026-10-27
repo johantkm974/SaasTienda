@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SV Electrónicos - Inicio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="whatsapp-float.css">
+  <link rel="stylesheet" href="client.css">
+</head>
+<body>
+  <header class="navbar">
+    <a class="logo" href="inicio.html">SV</a>
+    <nav class="nav-links">
+      <a class="nav-link active" href="inicio.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        INICIO
+      </a>
+      <a class="nav-link" href="productos.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        PRODUCTOS
+      </a>
+      <a class="nav-link" href="nosotros.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        NOSOTROS
+      </a>
+      <a class="nav-link" href="contactanos.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        CONTACTO
+      </a>
+    </nav>
+    <div class="header-actions">
+      <a class="action-link" href="tienda.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="m1 1 4 2 3 9h13l3-11H6"></path></svg>
+        Tienda
+      </a>
+      <a class="action-link" href="index.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Panel
+      </a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="banner-carousel">
+      <div class="banner-track" id="bannerTrack">
+        <div class="banner-slide" style="background-image: url('https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=1400&q=80')">
+          <div class="banner-overlay">
+            <div class="banner-content">
+              <span class="eyebrow">Cargando...</span>
+              <h1>Bienvenido</h1>
+              <p>Preparando contenido...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="banner-btn prev" onclick="prevBanner()" aria-label="Anterior">&#10094;</button>
+      <button class="banner-btn next" onclick="nextBanner()" aria-label="Siguiente">&#10095;</button>
+      <div class="banner-dots" id="bannerDots">
+      </div>
+    </div>
+  </section>
+
+  <section class="shop-categories">
+    <aside class="sidebar">
+      <ul class="sidebar-menu">
+        <li class="active"><a href="#" style="color: black;">Explorar categorias</a></li>
+      </ul>
+    </aside>
+    <div class="category-grid" id="categoryGrid">
+      <div class="empty-panel">Cargando categorias...</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-header">
+      <h2>Productos Destacados</h2>
+      <p>Los componentes más populares de nuestro catálogo</p>
+    </div>
+    <div class="product-grid" id="productGrid">
+      <div class="empty-panel">Cargando productos...</div>
+    </div>
+    <div style="text-align: center; margin-top: 32px;">
+      <a href="productos.html" class="primary-btn">Ver todos los productos</a>
+    </div>
+  </section>
+
+  <section class="section" style="background: linear-gradient(135deg, #e9f1ff 0%, #f0fdf4 100%); max-width: 100%; padding: 60px 5vw;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <div class="section-header">
+        <h2 id="razonesTitle">¿Por qué elegirnos?</h2>
+        <p id="razonesSubtitle">Somos tu mejor opción en componentes electrónicos</p>
+      </div>
+      <div class="values-grid">
+        <div class="value-item">
+          <div class="icon-wrapper">
+            <i class="fas fa-truck-fast"></i>
+          </div>
+          <h4>Envío Rápido</h4>
+          <p>Recibe tus pedidos en 24-48 horas en Lima y 3-5 días a nivel nacional.</p>
+        </div>
+        <div class="value-item">
+          <div class="icon-wrapper">
+            <i class="fas fa-award"></i>
+          </div>
+          <h4>Garantía</h4>
+          <p>Todos nuestros productos incluyen garantía oficial del fabricante.</p>
+        </div>
+        <div class="value-item">
+          <div class="icon-wrapper">
+            <i class="fas fa-shield-halved"></i>
+          </div>
+          <h4>Pago Seguro</h4>
+          <p>Aceptamos todas las tarjetas y métodos de pago con estándares de alta seguridad.</p>
+        </div>
+        <div class="value-item">
+          <div class="icon-wrapper">
+            <i class="fas fa-headset"></i>
+          </div>
+          <h4>Soporte 24/7</h4>
+          <p>Nuestro equipo está disponible para ayudarte en todo momento.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-header">
+      <h2>¿Necesitas ayuda?</h2>
+      <p>Estamos aquí para orientarte en tu compra</p>
+    </div>
+    <div style="text-align: center;">
+      <a href="contactanos.html" class="primary-btn">Contáctanos ahora</a>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand-icon">SV</div>
+        <p id="footerMarcaTexto">Tu tienda de confianza para componentes electrónicos. Ofrecemos los mejores productos con garantía y soporte.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="inicio.html">Inicio</a></li>
+          <li><a href="productos.html">Productos</a></li>
+          <li><a href="nosotros.html">Nosotros</a></li>
+          <li><a href="contactanos.html">Contacto</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Servicio</h4>
+        <ul>
+          <li><a href="tienda.html">Tienda Online</a></li>
+          <li><a href="#">Mis pedidos</a></li>
+          <li><a href="#">Garantías</a></li>
+          <li><a href="#">Devoluciones</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a id="footerTelefono" href="tel:+51999888777">+51 999 888 777</a></li>
+          <li><a id="footerCorreo" href="mailto:ventas@svelectronicos.com">ventas@svelectronicos.com</a></li>
+          <li><a id="footerDireccion" href="#">Lima, Perú</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 SV Electrónicos. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+  <script src="client.js"></script>
+  <script src="footer.js?v=2"></script>
+  <script>
+    async function loadPageContent() {
+      try {
+        const res = await fetch('/api/contenido/home');
+        if (!res.ok) return;
+        const c = await res.json();
+        if (c.seccion_razones_titulo) document.getElementById('razonesTitle').textContent = c.seccion_razones_titulo;
+        if (c.seccion_razones_subtitulo) document.getElementById('razonesSubtitle').textContent = c.seccion_razones_subtitulo;
+      } catch(e) {}
+    }
+    loadPageContent();
+  </script>
+  <script src="whatsapp-float.js"></script>
+</body>
+</html>

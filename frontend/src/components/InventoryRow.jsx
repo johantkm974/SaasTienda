@@ -6,7 +6,7 @@ export function InventoryRow({ name, category, stock, price, status }){
       <td className="py-4 px-4 font-semibold text-slate-800">{name}</td>
       <td className="py-4 px-4 text-slate-500">{category}</td>
       <td className="py-4 px-4 font-medium">{stock} u.</td>
-      <td className="py-4 px-4 font-bold text-slate-700">S/ {price.toFixed(2)}</td>
+      <td className="py-4 px-4 font-bold text-slate-700">S/ {Number(price || 0).toFixed(2)}</td>
       <td className="py-4 px-4">
         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${
           status === 'Disponible' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 

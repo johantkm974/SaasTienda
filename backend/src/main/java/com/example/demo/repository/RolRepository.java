@@ -3,7 +3,9 @@ import com.example.demo.model.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface RolRepository extends JpaRepository<Rol, Integer> {
-    // Los roles suelen ser globales, así que el findAll() estándar sirve
+    Optional<Rol> findByNombre(String nombre);
 }

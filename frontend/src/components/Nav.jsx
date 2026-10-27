@@ -12,10 +12,8 @@ export function Navbar({ onLoginClick }){
       </div>
       <div className="hidden md:flex items-center space-x-8 text-sm font-bold text-slate-600">
         <Link to="/" className="hover:text-emerald-600">Inicio</Link>
-        <Link to="/" className="hover:text-emerald-600">nosotros</Link>
-        {/* <Link to="/venta" className="hover:text-emerald-600">Ventas</Link>
-        <Link to="/inventario" className="hover:text-emerald-600">Inventario</Link> */}
-        <Link to="/dashboard" className="hover:text-emerald-600">Precios</Link>
+        <Link to="/" className="hover:text-emerald-600">Nosotros</Link>
+        <Link to="/register" className="hover:text-emerald-600">Precios</Link>
       </div>
       <div className="flex items-center space-x-4">
         <Link to="/login" onClick={onLoginClick} className="text-sm font-bold text-slate-700 hover:text-emerald-600 px-4 py-2">

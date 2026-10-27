@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Empresa;
+import com.example.demo.exception.NotFoundException;
 import com.example.demo.model.Proveedor;
 import com.example.demo.repository.EmpresaRepository;
 import com.example.demo.repository.ProveedorRepository;
@@ -21,7 +22,7 @@ public class ProveedorService {
         proveedor.setId(null);
 
         Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                .orElseThrow(() -> new NotFoundException("Empresa no encontrada"));
 
         proveedor.setEmpresa(empresa);
 
@@ -43,7 +44,7 @@ public class ProveedorService {
                     return proveedorRepository.save(proveedorExistente);
 
                 }).orElseThrow(() ->
-                        new RuntimeException("Proveedor no pertenece a su empresa"));
+                        new NotFoundException("Proveedor no pertenece a su empresa"));
     }
 
     public List<Proveedor> listarPorEmpresa(Integer empresaId) {
@@ -54,7 +55,7 @@ public class ProveedorService {
 
         return proveedorRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() ->
-                        new RuntimeException("Proveedor no encontrado en su empresa"));
+                        new NotFoundException("Proveedor no encontrado en su empresa"));
     }
 
     public void eliminarSeguro(Integer id, Integer empresaId) {
@@ -62,7 +63,7 @@ public class ProveedorService {
         Proveedor proveedor = proveedorRepository
                 .findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() ->
-                        new RuntimeException("Proveedor no pertenece a su empresa"));
+                        new NotFoundException("Proveedor no pertenece a su empresa"));
 
         proveedorRepository.delete(proveedor);
     }

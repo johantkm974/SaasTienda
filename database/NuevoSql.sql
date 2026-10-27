@@ -142,11 +142,12 @@ INSERT INTO empresa (nombre_comercial, ruc, telefono, estado) VALUES
 ('Pacific Tech', '20123456789', '944433322', 'ACTIVO');
 
 -- Usuarios administradores (uno por empresa, rol_id=1)
+-- Contraseña de prueba para todos: 12345678 (encriptada con BCrypt)
 INSERT INTO usuario (empresa_id, nombre, dni, correo, contrasena, rol_id) VALUES
-(1, 'Carlos Admin', '45678901', 'admin@techstore.pe', 'secret123', 1),
-(2, 'María López', '56789012', 'admin@inkaelectronics.pe', 'secret123', 1),
-(3, 'Juan Pérez', '67890123', 'admin@andescomputers.pe', 'secret123', 1),
-(4, 'Lucía García', '78901234', 'admin@pacifictech.pe', 'secret123', 1);
+(1, 'Carlos Admin', '45678901', 'admin@techstore.pe', '$2b$10$RvK3FZA2pmdvyf8kXthoBO86g.VMV0BP7ut9pGAqxJacsaOU1DYDC', 1),
+(2, 'María López', '56789012', 'admin@inkaelectronics.pe', '$2b$10$RvK3FZA2pmdvyf8kXthoBO86g.VMV0BP7ut9pGAqxJacsaOU1DYDC', 1),
+(3, 'Juan Pérez', '67890123', 'admin@andescomputers.pe', '$2b$10$RvK3FZA2pmdvyf8kXthoBO86g.VMV0BP7ut9pGAqxJacsaOU1DYDC', 1),
+(4, 'Lucía García', '78901234', 'admin@pacifictech.pe', '$2b$10$RvK3FZA2pmdvyf8kXthoBO86g.VMV0BP7ut9pGAqxJacsaOU1DYDC', 1);
 
 -- ==========================================================
 -- CATEGORÍAS Y PRODUCTOS (150 productos en total)

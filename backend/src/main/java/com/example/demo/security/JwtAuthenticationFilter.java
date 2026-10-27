@@ -7,12 +7,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -36,13 +38,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String correo = claims.getSubject();
 
                 if (correo != null) {
-                    // Creamos la sesión en Spring sin pedirle permiso a la base de datos de nuevo (más rápido)
+                    String rol = claims.get("rol", String.class);
+                    List<SimpleGrantedAuthority> authorities = rol != null
+                            ? List.of(new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase()))
+                            : Collections.emptyList();
+
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                            correo, null, Collections.emptyList());
+                            correo, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             } catch (Exception e) {
-                // Si el token es falso o expiró, no hacemos nada y seguirá dando 403
+                SecurityContextHolder.clearContext();
             }
         }
 

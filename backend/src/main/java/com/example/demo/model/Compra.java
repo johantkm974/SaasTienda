@@ -24,7 +24,7 @@ public class Compra {
     @JoinColumn(name = "proveedor_id")
     private Proveedor proveedor;
 
-    @Column(insertable = false, updatable = false)
+    @Column
     private LocalDateTime fecha;
 
     @Column(name = "total_compra", nullable = false, precision = 10, scale = 2)
@@ -35,4 +35,9 @@ public class Compra {
 
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleCompra> detalles;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.fecha == null) this.fecha = LocalDateTime.now();
+    }
 }

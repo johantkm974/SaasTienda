@@ -4,6 +4,7 @@ import com.example.demo.model.Compra;
 import com.example.demo.service.CompraService;
 import com.example.demo.service.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class CompraController {
     private final JwtService jwtService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public Compra registrar(@RequestBody Compra compra,
                              @RequestHeader("Authorization") String token) {
 
@@ -28,6 +30,13 @@ public class CompraController {
     public List<Compra> listar(@RequestHeader("Authorization") String token) {
 
         Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
+        return compraService.listarPorEmpresa(empresaId);
+    }
+
+    // El SUPREMO puede ver las compras de cualquier empresa
+    @GetMapping("/empresa/{empresaId}")
+    @PreAuthorize("hasRole('SUPREMO')")
+    public List<Compra> listarPorEmpresaId(@PathVariable Integer empresaId) {
         return compraService.listarPorEmpresa(empresaId);
     }
 

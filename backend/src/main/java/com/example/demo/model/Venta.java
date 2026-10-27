@@ -22,8 +22,13 @@ public class Venta {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
-    private Usuario usuario; // Cliente
-    @Column(insertable = false, updatable = false)
+    private Usuario usuario; // Vendedor que atendió
+
+    @ManyToOne
+    @JoinColumn(name = "cliente_id")
+    private Cliente cliente; // Cliente (tabla aparte, no usuario del sistema)
+
+    @Column
     private LocalDateTime fecha;
 
     @Column(name = "total_venta", nullable = false, precision = 10, scale = 2)
@@ -35,13 +40,21 @@ public class Venta {
     @Column(name = "estado_pago", length = 50)
     private String estadoPago;
 
+    @Column(name = "estado_venta", length = 30)
+    private String estadoVenta;
+
+    @Column(name = "stock_reservado", nullable = false)
+    private Boolean stockReservado = false;
+
     // Relación inversa para acceder a los detalles desde la venta
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleVenta> detalles;
 
     @PrePersist
     public void prePersist() {
+        if (this.fecha == null) this.fecha = LocalDateTime.now();
         if (this.estadoPago == null) this.estadoPago = "PENDIENTE";
+        if (this.estadoVenta == null) this.estadoVenta = "PENDIENTE_PAGO";
     }
 
 }

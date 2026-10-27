@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SV Electrónicos - Productos</title>
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="whatsapp-float.css">
+  <link rel="stylesheet" href="client.css">
+  <style>
+    .search-bar {
+      display: flex;
+      gap: 12px;
+      max-width: 500px;
+      margin: 0 auto 32px;
+    }
+    
+    .search-bar input {
+      flex: 1;
+    }
+    
+    .filter-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    
+    .filter-tag {
+      padding: 8px 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .filter-tag:hover, .filter-tag.active {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+    
+    .product-count {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <a class="logo" href="inicio.html">SV</a>
+    <nav class="nav-links">
+      <a class="nav-link" href="inicio.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        INICIO
+      </a>
+      <a class="nav-link active" href="productos.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        PRODUCTOS
+      </a>
+      <a class="nav-link" href="nosotros.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        NOSOTROS
+      </a>
+      <a class="nav-link" href="contactanos.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        CONTACTO
+      </a>
+    </nav>
+    <div class="header-actions">
+      <a class="action-link" href="tienda.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="m1 1 4 2 3 9h13l3-11H6"></path></svg>
+        Tienda
+      </a>
+      <a class="action-link" href="index.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Panel
+      </a>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="section-header">
+      <h2 id="pageTitle">Nuestros Productos</h2>
+      <p id="pageSubtitle">Explora nuestro catálogo completo de componentes electrónicos</p>
+    </div>
+    
+    <div class="search-bar">
+      <input type="search" id="searchInput" placeholder="Buscar producto, marca o categoría...">
+    </div>
+    
+    <div class="filter-tags" id="filterTags">
+      <button class="filter-tag active" data-category="all">Todos</button>
+    </div>
+    
+    <p class="product-count" id="productCount">Cargando productos...</p>
+    
+    <div class="product-grid" id="productGrid">
+      <div class="empty-panel">Cargando productos...</div>
+    </div>
+  </section>
+
+  <section style="background: var(--dark); padding: 48px 5vw; text-align: center; color: #fff; margin-top: 0;">
+    <h2 style="margin-bottom: 12px;">¿Listo para comprar?</h2>
+    <p style="color: rgba(255,255,255,0.7); margin-bottom: 24px;">Ingresa a nuestra tienda y completa tu pedido en minutos</p>
+    <a href="tienda.html" class="primary-btn" style="background: var(--yellow); color: var(--dark);">Ir a la Tienda</a>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand-icon">SV</div>
+        <p id="footerMarcaTexto">Tu tienda de confianza para componentes electrónicos. Ofrecemos los mejores productos con garantía y soporte.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="inicio.html">Inicio</a></li>
+          <li><a href="productos.html">Productos</a></li>
+          <li><a href="nosotros.html">Nosotros</a></li>
+          <li><a href="contactanos.html">Contacto</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Servicio</h4>
+        <ul>
+          <li><a href="tienda.html">Tienda Online</a></li>
+          <li><a href="#">Mis pedidos</a></li>
+          <li><a href="#">Garantías</a></li>
+          <li><a href="#">Devoluciones</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a id="footerTelefono" href="tel:+51999888777">+51 999 888 777</a></li>
+          <li><a id="footerCorreo" href="mailto:ventas@svelectronicos.com">ventas@svelectronicos.com</a></li>
+          <li><a id="footerDireccion" href="#">Lima, Perú</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 SV Electrónicos. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+  <script>
+    let allProducts = [];
+    let selectedCategory = 'all';
+    let btnComprarText = 'Comprar';
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    if (categoryParam) {
+      selectedCategory = decodeURIComponent(categoryParam);
+    }
+    
+    const currency = new Intl.NumberFormat('es-PE', {
+      style: 'currency',
+      currency: 'PEN'
+    });
+    
+    async function loadProducts() {
+      const grid = document.getElementById('productGrid');
+      try {
+        const response = await fetch('/api/tienda/productos');
+        if (!response.ok) throw new Error(`Error ${response.status}`);
+        
+        allProducts = await response.json();
+        renderFilterTags();
+        renderProducts();
+      } catch (error) {
+        grid.innerHTML = '<div class="empty-panel">No se pudieron cargar los productos</div>';
+        console.error(error);
+      }
+    }
+    
+    function renderFilterTags() {
+      const categories = [...new Set(allProducts.map(p => p.categoria).filter(Boolean))];
+      const container = document.getElementById('filterTags');
+      
+      const normalizedSelected = selectedCategory.toLowerCase();
+      
+      container.innerHTML = `
+        <button class="filter-tag${selectedCategory === 'all' ? ' active' : ''}" data-category="all">Todos</button>
+        ${categories.map(cat => `
+          <button class="filter-tag${cat.toLowerCase() === normalizedSelected ? ' active' : ''}" data-category="${cat}">${cat}</button>
+        `).join('')}
+      `;
+      
+      container.querySelectorAll('.filter-tag').forEach(tag => {
+        tag.addEventListener('click', () => {
+          selectedCategory = tag.dataset.category;
+          container.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+          tag.classList.add('active');
+          renderProducts();
+        });
+      });
+    }
+    
+    function renderProducts() {
+      const grid = document.getElementById('productGrid');
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      
+      const filtered = allProducts.filter(product => {
+        const matchesSearch = [product.nombre, product.marca, product.codigoSku, product.categoria]
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
+        
+        const matchesCategory = selectedCategory === 'all' || product.categoria.toLowerCase() === selectedCategory.toLowerCase();
+        
+        return matchesSearch && matchesCategory;
+      });
+      
+      document.getElementById('productCount').textContent = `${filtered.length} producto(s) encontrado(s)`;
+      
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="empty-panel">No se encontraron productos con esos criterios</div>';
+        return;
+      }
+      
+      grid.innerHTML = filtered.map(product => `
+        <article class="product-card">
+          <img src="${product.imagen || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80'}" alt="${product.nombre}">
+          <div class="product-body">
+            <div class="product-meta">
+              <span class="badge">${product.categoria || 'Catálogo'}</span>
+              <span class="stock">${product.stock} en stock</span>
+            </div>
+            <h3>${product.nombre}</h3>
+            <p>${product.descripcion || 'Producto disponible para compra online.'}</p>
+            <div class="product-footer">
+              <span class="price">${currency.format(product.precio || 0)}</span>
+              <button type="button" class="primary-btn" onclick="comprarAhora(${product.idProducto}, '${product.categoria || ''}')">${btnComprarText}</button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+    
+    document.getElementById('searchInput').addEventListener('input', renderProducts);
+    
+    function toast(message) {
+      const toastElement = document.getElementById('toast');
+      toastElement.textContent = message;
+      toastElement.classList.add('show');
+      window.clearTimeout(toastElement.timer);
+      toastElement.timer = window.setTimeout(() => toastElement.classList.remove('show'), 3000);
+    }
+    
+    function comprarAhora(idProducto, categoria) {
+      localStorage.setItem('pendingProduct', String(idProducto));
+      if (categoria) {
+        localStorage.setItem('pendingCategory', categoria);
+      }
+      window.location.href = 'tienda.html';
+    }
+    
+    loadProducts();
+
+    async function loadPageContent() {
+      try {
+        const res = await fetch('/api/contenido/productos');
+        if (!res.ok) return;
+        const c = await res.json();
+        if (c.titulo) document.getElementById('pageTitle').textContent = c.titulo;
+        if (c.subtitulo) document.getElementById('pageSubtitle').textContent = c.subtitulo;
+        if (c.texto_boton_comprar) {
+          btnComprarText = c.texto_boton_comprar;
+          document.querySelectorAll('.product-card .primary-btn').forEach(b => b.textContent = btnComprarText);
+        }
+      } catch(e) {}
+    }
+    loadPageContent();
+  </script>
+  <script src="whatsapp-float.js"></script>
+  <script src="footer.js?v=2"></script>
+</body>
+</html>
