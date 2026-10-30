@@ -26,12 +26,11 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/tienda")
+@RequestMapping("/api/tienda/{empresaId}")
 @RequiredArgsConstructor
 public class TiendaPublicaController {
 
     private final TiendaPublicaService tiendaPublicaService;
-    private final EmpresaService empresaService;
     private final CategoriaService categoriaService;
     private final ProductoService productoService;
     private final ClienteService clienteService;
@@ -42,7 +41,7 @@ public class TiendaPublicaController {
     private final JwtService jwtService;
     private final ReciboPdfService reciboPdfService;
 
-    @GetMapping("/{empresaId}")
+    @GetMapping
     public TiendaInfoResponse infoTienda(@PathVariable Integer empresaId) {
 
         Empresa empresa = tiendaPublicaService.obtenerTienda(empresaId);
@@ -83,7 +82,7 @@ public class TiendaPublicaController {
                 .build();
     }
 
-    @GetMapping("/{empresaId}/contenido/{vista}")
+    @GetMapping("/contenido/{vista}")
     public Map<String, Object> contenidoVista(@PathVariable Integer empresaId,
                                               @PathVariable String vista) {
 
@@ -96,7 +95,7 @@ public class TiendaPublicaController {
                         .toList());
     }
 
-    @PostMapping("/{empresaId}/registro")
+    @PostMapping("/registro")
     public Object registrarCliente(@PathVariable Integer empresaId,
                                    @RequestBody RegistroClienteTiendaRequest request) {
         if (request.contrasena() != null && !request.contrasena().isBlank()) {
@@ -114,19 +113,19 @@ public class TiendaPublicaController {
         return clienteService.registrar(empresaId, cliente);
     }
 
-    @PostMapping("/{empresaId}/login")
+    @PostMapping("/login")
     public Map<String, Object> loginCliente(@PathVariable Integer empresaId,
                                             @RequestBody LoginClienteTiendaRequest request) {
         return clienteService.login(empresaId, request.correo(), request.contrasena());
     }
 
-    @PostMapping("/{empresaId}/checkout")
+    @PostMapping("/checkout")
     public TiendaCheckoutResponse checkout(@PathVariable Integer empresaId,
                                            @RequestBody TiendaCheckoutRequest request) {
         return tiendaPublicaService.checkout(empresaId, request);
     }
 
-    @GetMapping("/{empresaId}/mis-compras")
+    @GetMapping("/mis-compras")
     public List<Map<String, Object>> misCompras(@PathVariable Integer empresaId,
                                                 @RequestHeader(value = "Authorization", required = false) String authorization) {
         if (authorization == null || !"CLIENTE".equals(jwtService.obtenerRolDeToken(authorization))) {
@@ -169,7 +168,7 @@ public class TiendaPublicaController {
                 .toList();
     }
 
-    @GetMapping("/{empresaId}/compras/{correo}")
+    @GetMapping("/compras/{correo}")
     public List<Venta> comprasPorCorreo(@PathVariable Integer empresaId,
                                         @PathVariable String correo) {
         tiendaPublicaService.obtenerTienda(empresaId);
@@ -177,7 +176,7 @@ public class TiendaPublicaController {
         return ventaRepository.findByClienteIdAndEmpresaId(cliente.getId(), empresaId);
     }
 
-    @GetMapping("/{empresaId}/compras/{ventaId}/recibo")
+    @GetMapping("/compras/{ventaId}/recibo")
     public ResponseEntity<byte[]> reciboVenta(@PathVariable Integer empresaId,
                                               @PathVariable Integer ventaId,
                                               @RequestParam(required = false) String correo,

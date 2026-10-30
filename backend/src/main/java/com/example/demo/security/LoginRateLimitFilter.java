@@ -4,7 +4,6 @@ import com.example.demo.exception.ApiError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,7 +64,10 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     private Bucket crearBucket() {
         Duration ventana = Duration.ofMinutes(1);
         return Bucket.builder()
-                .addLimit(Bandwidth.classic(maxIntentos, Refill.greedy(maxIntentos, ventana)))
+                .addLimit(Bandwidth.builder()
+                        .capacity(maxIntentos)
+                        .refillGreedy(maxIntentos, ventana)
+                        .build())
                 .build();
     }
 

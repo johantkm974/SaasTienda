@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -21,7 +20,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CloudinaryService {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final CredencialService credencialService;
 
     @Value("${cloudinary.cloud-name:}")
@@ -79,9 +77,8 @@ public class CloudinaryService {
                 ? dataBase64.substring(dataBase64.indexOf(",") + 1)
                 : dataBase64;
 
-        byte[] imagen;
         try {
-            imagen = Base64.getDecoder().decode(base64);
+            Base64.getDecoder().decode(base64);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Imagen base64 inválida");
         }
