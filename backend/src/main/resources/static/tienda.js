@@ -24,7 +24,6 @@ document.getElementById("closeAuthBtn").addEventListener("click", () => document
 document.getElementById("closeOrdersBtn").addEventListener("click", () => document.getElementById("ordersModal").close());
 document.getElementById("authForm").addEventListener("submit", submitAuth);
 document.getElementById("checkoutForm").addEventListener("submit", checkout);
-document.getElementById("ordersEmailBtn").addEventListener("click", openOrders);
 document.getElementById("logoutBtn").addEventListener("click", logout);
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => setAuthMode(tab.dataset.mode));
@@ -430,17 +429,13 @@ function showOrderConfirmation(venta) {
 }
 
 async function openOrders() {
-  const correo = (state.cliente && state.cliente.correo) || document.getElementById("ordersEmailInput").value.trim();
-  if (!correo) {
-    document.getElementById("ordersModal").showModal();
-    toast("Ingresa tu correo para ver tus compras");
+  if (!state.authToken) {
+    toast("Ingresa a tu cuenta para ver tus compras");
+    document.getElementById("authModal").showModal();
     return;
   }
   try {
-    const url = state.authToken
-      ? "/api/tienda/mis-compras"
-      : `/api/tienda/mis-compras-publico?correo=${encodeURIComponent(correo)}`;
-    const response = await fetch(url, state.authToken ? { headers: authHeaders() } : {});
+    const response = await fetch("/api/tienda/mis-compras", { headers: authHeaders() });
     if (!response.ok) {
       throw new Error(`Error ${response.status}`);
     }

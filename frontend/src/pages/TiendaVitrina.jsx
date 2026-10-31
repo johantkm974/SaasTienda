@@ -8,9 +8,11 @@ import '../styles/vitrina.css';
 export function TiendaVitrina() {
   const { tienda, color } = useOutletContext();
   const carritoCtx = useCarrito();
-  const { id: empresaId } = tienda;
 
-  const productos = tienda?.productos || [];
+  // La dependencia es `tienda` (no `tienda?.productos`): React Compiler infiere
+  // la propiedad accedida, y con `|| []` la referencia cambiaría en cada render
+  // invalidando los useMemo siguientes.
+  const productos = useMemo(() => tienda?.productos || [], [tienda]);
 
   const piezaPrincipal = useMemo(
     () => [...productos].sort((a, b) => (b.precioVenta || 0) - (a.precioVenta || 0))[0],

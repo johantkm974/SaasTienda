@@ -44,6 +44,7 @@ public class UsuarioController {
     }
 
     @GetMapping({"/", "/empresa", ""})
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'SUPREMO')")
     public List<Usuario> listarPorEmpresa(@RequestHeader("Authorization") String token) {
         Integer empresaId = jwtService.obtenerEmpresaIdDeToken(token);
         return usuarioService.listarPorEmpresa(empresaId);

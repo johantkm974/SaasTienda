@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { apiFetch } from '../api';
 
 const CarritoContext = createContext(null);
 
@@ -158,6 +157,10 @@ export function CarritoProvider({ empresaId, tienda, children }) {
   return <CarritoContext.Provider value={valor}>{children}</CarritoContext.Provider>;
 }
 
+// Este módulo es un contexto de React: exportar el hook junto al Provider es el
+// patrón habitual. La regla de fast-refresh no aplica a contextos (sin componentes
+// no hay recarga caliente que perder).
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCarrito() {
   return useContext(CarritoContext);
 }

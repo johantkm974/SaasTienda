@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -98,12 +97,6 @@ public class TiendaController {
     @PostMapping("/checkout/publico")
     public VentaClienteResponse checkoutPublico(@RequestBody CheckoutPublicoRequest request) {
         return tiendaService.checkoutPublico(request);
-    }
-
-    // Consulta de compras sin login, por correo
-    @GetMapping("/mis-compras-publico")
-    public List<VentaClienteResponse> misComprasPublico(@RequestParam String correo) {
-        return tiendaService.misCompras(correo);
     }
 
     @GetMapping("/mis-compras")

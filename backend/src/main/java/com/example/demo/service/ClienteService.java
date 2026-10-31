@@ -5,13 +5,18 @@ import com.example.demo.model.Cliente;
 import com.example.demo.model.ClienteAutenticacion;
 import com.example.demo.model.Empresa;
 import com.example.demo.model.EstadoEmpresa;
+import com.example.demo.model.VerificacionRegistro;
 import com.example.demo.repository.ClienteAutenticacionRepository;
 import com.example.demo.repository.ClienteRepository;
 import com.example.demo.repository.EmpresaRepository;
+import com.example.demo.repository.VerificacionRegistroRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -20,11 +25,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ClienteService {
 
+    /** Validez del código de verificación de correo. */
+    private static final Duration CADUCIDAD_CODIGO = Duration.ofMinutes(15);
+    /** Intentos fallidos permitidos antes de invalidar el código. */
+    private static final int MAX_INTENTOS_CODIGO = 5;
+    private static final SecureRandom ALEATORIO = new SecureRandom();
+
     private final ClienteRepository clienteRepository;
     private final EmpresaRepository empresaRepository;
     private final PasswordEncoder passwordEncoder;
     private final ClienteAutenticacionRepository clienteAutenticacionRepository;
+    private final VerificacionRegistroRepository verificacionRegistroRepository;
     private final JwtService jwtService;
+    private final EmailBrevoService emailBrevoService;
 
     public Cliente registrar(Integer empresaId, Cliente cliente) {
         cliente.setId(null);
@@ -117,9 +130,19 @@ public class ClienteService {
     }
 
     /**
-     * Registro híbrido desde la tienda pública: crea (o recupera) el Cliente por correo
-     * y le asocia una cuenta con contraseña. Devuelve la sesión (token JWT de cliente).
+     * Registro con contraseña desde la tienda pública.
+     *
+     * Si el correo ya existe como cliente invitado (creado en el checkout sin
+     * cuenta) NO se vincula la todavía: se pide un código enviado a ese correo,
+     * que demuestra su propiedad. Sin eso, cualquiera podría registrarse con el
+     * correo de otra persona y quedarse con su historial de compras, teléfono y
+     * dirección. Si el correo no tenía registro previo no hay nada que apropiarse
+     * y el registro procede directamente.
+     *
+     * @return la sesión (token) si no hizo falta verificar, o
+     *         {@code requiereVerificacion=true} si hay que introducir el código.
      */
+    @Transactional
     public Map<String, Object> registrarConCuenta(Integer empresaId, String nombres, String apellidos,
                                                   String correo, String telefono, String direccion,
                                                   String contrasena) {
@@ -130,18 +153,132 @@ public class ClienteService {
             throw new RuntimeException("El correo ya tiene una cuenta registrada");
         }
 
-        Cliente cliente = clienteRepository.findByCorreoAndEmpresaId(correo, empresaId)
-                .orElseGet(() -> registrar(empresaId, construirCliente(
-                        nombres, apellidos, correo, telefono, direccion)));
+        if (clienteRepository.findByCorreoAndEmpresaId(correo, empresaId).isPresent()) {
+            exigirEnvioCodigo(empresaId, nombres, apellidos, correo, telefono, direccion, contrasena);
+            return Map.of(
+                    "requiereVerificacion", true,
+                    "correo", correo,
+                    "mensaje", "Ese correo ya tiene datos en esta tienda. "
+                            + "Te enviamos un código para confirmar que es tuyo.");
+        }
 
+        Cliente cliente = registrar(empresaId, construirCliente(
+                nombres, apellidos, correo, telefono, direccion));
+        return crearCuenta(cliente, correo, contrasena);
+    }
+
+    /**
+     * Crea el registro de verificación y envía el código. Si el correo no puede
+     * enviarse, se invalida el registro y se lanza el error: nunca se vincula la
+     * cuenta sin haber podido demostrar la propiedad del correo (fallo cerrado).
+     */
+    private void exigirEnvioCodigo(Integer empresaId, String nombres, String apellidos,
+                                   String correo, String telefono, String direccion,
+                                   String contrasena) {
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new NotFoundException("La tienda no existe"));
+
+        String codigo = generarCodigo();
+        LocalDateTime ahora = LocalDateTime.now();
+
+        verificacionRegistroRepository.deleteByEmpresaIdAndCorreo(empresaId, correo);
+
+        VerificacionRegistro pendiente = new VerificacionRegistro();
+        pendiente.setEmpresa(empresa);
+        pendiente.setCorreo(correo);
+        pendiente.setNombres(nombres);
+        pendiente.setApellidos(apellidos);
+        pendiente.setTelefono(telefono);
+        pendiente.setDireccion(direccion);
+        pendiente.setPasswordHash(passwordEncoder.encode(contrasena));
+        pendiente.setCodigoHash(passwordEncoder.encode(codigo));
+        pendiente.setIntentos(0);
+        pendiente.setExpiraEn(ahora.plus(CADUCIDAD_CODIGO));
+        pendiente.setCreadoEn(ahora);
+        verificacionRegistroRepository.save(pendiente);
+
+        boolean enviado = emailBrevoService.enviar(empresaId, correo, nombres,
+                "Código de verificación", htmlCodigo(codigo));
+
+        if (!enviado) {
+            verificacionRegistroRepository.delete(pendiente);
+            throw new RuntimeException("No se pudo enviar el código de verificación. "
+                    + "Inténtalo de nuevo en unos minutos.");
+        }
+    }
+
+    /**
+     * Comprueba el código y completa el registro, vinculando la cuenta al cliente
+     * existente. El código caduca, es de un solo uso y admite pocos intentos.
+     */
+    @Transactional
+    public Map<String, Object> verificarRegistro(Integer empresaId, String correo, String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            throw new RuntimeException("El código es obligatorio");
+        }
+        VerificacionRegistro pendiente = verificacionRegistroRepository
+                .findByEmpresaIdAndCorreo(empresaId, correo)
+                .orElseThrow(() -> new RuntimeException("No hay un registro pendiente para ese correo"));
+
+        if (pendiente.getExpiraEn().isBefore(LocalDateTime.now())) {
+            verificacionRegistroRepository.delete(pendiente);
+            throw new RuntimeException("El código ha caducado. Regístrate de nuevo.");
+        }
+        if (pendiente.getIntentos() >= MAX_INTENTOS_CODIGO) {
+            verificacionRegistroRepository.delete(pendiente);
+            throw new RuntimeException("Demasiados intentos. Regístrate de nuevo.");
+        }
+        if (!passwordEncoder.matches(codigo.trim(), pendiente.getCodigoHash())) {
+            pendiente.setIntentos(pendiente.getIntentos() + 1);
+            verificacionRegistroRepository.save(pendiente);
+            throw new RuntimeException("Código incorrecto");
+        }
+        if (clienteAutenticacionRepository.findByCorreo(correo).isPresent()) {
+            verificacionRegistroRepository.delete(pendiente);
+            throw new RuntimeException("El correo ya tiene una cuenta registrada");
+        }
+
+        Cliente cliente = clienteRepository.findByCorreoAndEmpresaId(correo, empresaId)
+                .orElseThrow(() -> new NotFoundException("Cliente no encontrado"));
+
+        ClienteAutenticacion autenticacion = new ClienteAutenticacion();
+        autenticacion.setCliente(cliente);
+        autenticacion.setCorreo(correo);
+        autenticacion.setPasswordHash(pendiente.getPasswordHash());
+        autenticacion.setUltimoAcceso(LocalDateTime.now());
+        clienteAutenticacionRepository.save(autenticacion);
+
+        verificacionRegistroRepository.delete(pendiente);
+        return sesion(cliente, correo);
+    }
+
+    private Map<String, Object> crearCuenta(Cliente cliente, String correo, String contrasena) {
         ClienteAutenticacion autenticacion = new ClienteAutenticacion();
         autenticacion.setCliente(cliente);
         autenticacion.setCorreo(correo);
         autenticacion.setPasswordHash(passwordEncoder.encode(contrasena));
         autenticacion.setUltimoAcceso(LocalDateTime.now());
         clienteAutenticacionRepository.save(autenticacion);
-
         return sesion(cliente, correo);
+    }
+
+    private String generarCodigo() {
+        return String.format("%06d", ALEATORIO.nextInt(1_000_000));
+    }
+
+    private String htmlCodigo(String codigo) {
+        return """
+                <div style="font-family:Arial,Helvetica,sans-serif;max-width:460px;margin:0 auto;color:#0f172a">
+                  <h2 style="margin:0 0 12px">Confirma tu correo</h2>
+                  <p style="margin:0 0 16px">Introduce este código para terminar de crear tu cuenta:</p>
+                  <p style="font-size:34px;letter-spacing:10px;font-weight:bold;text-align:center;
+                            background:#f1f5f9;padding:16px 0;border-radius:12px;margin:0 0 16px">%s</p>
+                  <p style="margin:0;color:#64748b;font-size:13px">
+                    Caduca en 15 minutos y sólo puede usarse una vez.
+                    Si no has sido tú, ignora este mensaje: no se habrá creado ninguna cuenta.
+                  </p>
+                </div>
+                """.formatted(codigo);
     }
 
     /** Login de cliente con contraseña en una tienda específica. Devuelve la sesión con token. */

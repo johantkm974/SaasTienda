@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState  } from 'react';
-import { apiFetch, getRolFromToken, setToken } from '../api';
+import { apiFetch, setToken } from '../api';
 
 import { 
   Mail,

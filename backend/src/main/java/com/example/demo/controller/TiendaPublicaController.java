@@ -119,19 +119,38 @@ public class TiendaPublicaController {
         return clienteService.login(empresaId, request.correo(), request.contrasena());
     }
 
+    /**
+     * Segundo paso del registro: confirma el código enviado al correo para poder
+     * vincular la cuenta a un cliente que ya existía (registro invitado).
+     */
+    @PostMapping("/registro/verificar")
+    public Map<String, Object> verificarRegistroCliente(@PathVariable Integer empresaId,
+                                                        @RequestBody VerificarRegistroTiendaRequest request) {
+        return clienteService.verificarRegistro(empresaId, request.correo(), request.codigo());
+    }
+
     @PostMapping("/checkout")
     public TiendaCheckoutResponse checkout(@PathVariable Integer empresaId,
                                            @RequestBody TiendaCheckoutRequest request) {
         return tiendaPublicaService.checkout(empresaId, request);
     }
 
-    @GetMapping("/mis-compras")
-    public List<Map<String, Object>> misCompras(@PathVariable Integer empresaId,
-                                                @RequestHeader(value = "Authorization", required = false) String authorization) {
+    /**
+     * Exige un token de cliente valido y devuelve el correo de su titular.
+     * La identidad se resuelve siempre desde el token, nunca desde un parametro
+     * del pedido, de modo que un cliente no pueda leer recursos de otro.
+     */
+    private String exigirCliente(String authorization) {
         if (authorization == null || !"CLIENTE".equals(jwtService.obtenerRolDeToken(authorization))) {
             throw new NotFoundException("Sesion de cliente invalida");
         }
-        String correo = jwtService.extractSubject(authorization);
+        return jwtService.extractSubject(authorization);
+    }
+
+    @GetMapping("/mis-compras")
+    public List<Map<String, Object>> misCompras(@PathVariable Integer empresaId,
+                                                @RequestHeader(value = "Authorization", required = false) String authorization) {
+        String correo = exigirCliente(authorization);
         Cliente cliente = clienteService.buscarPorCorreo(correo, empresaId);
         List<Venta> ventas = ventaRepository.findByClienteIdAndEmpresaId(cliente.getId(), empresaId);
         return ventas.stream()
@@ -170,26 +189,28 @@ public class TiendaPublicaController {
 
     @GetMapping("/compras/{correo}")
     public List<Venta> comprasPorCorreo(@PathVariable Integer empresaId,
-                                        @PathVariable String correo) {
+                                        @PathVariable String correo,
+                                        @RequestHeader(value = "Authorization", required = false) String authorization) {
+        String correoToken = exigirCliente(authorization);
+        if (!correo.equalsIgnoreCase(correoToken)) {
+            throw new NotFoundException("Sesion de cliente invalida");
+        }
         tiendaPublicaService.obtenerTienda(empresaId);
-        Cliente cliente = clienteService.buscarPorCorreo(correo, empresaId);
+        Cliente cliente = clienteService.buscarPorCorreo(correoToken, empresaId);
         return ventaRepository.findByClienteIdAndEmpresaId(cliente.getId(), empresaId);
     }
 
     @GetMapping("/compras/{ventaId}/recibo")
     public ResponseEntity<byte[]> reciboVenta(@PathVariable Integer empresaId,
                                               @PathVariable Integer ventaId,
-                                              @RequestParam(required = false) String correo,
                                               @RequestHeader(value = "Authorization", required = false) String authorization) {
+        String correoToken = exigirCliente(authorization);
+
         Venta venta = ventaRepository.findByIdAndEmpresaId(ventaId, empresaId)
                 .orElseThrow(() -> new NotFoundException("Venta no encontrada"));
 
-        String correoValido = correo;
-        if (correoValido == null && authorization != null) {
-            correoValido = jwtService.extractSubject(authorization);
-        }
-        if (correoValido == null || venta.getCliente() == null
-                || !correoValido.equalsIgnoreCase(venta.getCliente().getCorreo())) {
+        if (venta.getCliente() == null
+                || !correoToken.equalsIgnoreCase(venta.getCliente().getCorreo())) {
             throw new NotFoundException("Recibo no disponible para ese correo");
         }
 
@@ -211,6 +232,9 @@ public class TiendaPublicaController {
     }
 
     public record LoginClienteTiendaRequest(String correo, String contrasena) {
+    }
+
+    public record VerificarRegistroTiendaRequest(String correo, String codigo) {
     }
 
     private static TiendaProductoResponse aProductoResponse(Producto p) {

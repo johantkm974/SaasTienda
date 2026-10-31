@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -173,6 +174,16 @@ public class PayPalService {
         Venta venta = ventaRepository.findById(ventaId)
                 .orElseThrow(() -> new NotFoundException("Venta no encontrada"));
 
+        // La orden debe estar registrada a ESTA venta: sin esta comprobación,
+        // una orden propia podría acreditar el pago de otra venta más cara.
+        Pago orden = pagoRepository.findByExternalId(paypalOrderId)
+                .orElseThrow(() -> new NotFoundException("Orden de PayPal no encontrada"));
+        if (orden.getVenta() == null || !ventaId.equals(orden.getVenta().getId())
+                || orden.getEmpresa() == null
+                || !venta.getEmpresa().getId().equals(orden.getEmpresa().getId())) {
+            throw new RuntimeException("La orden de PayPal no corresponde a esta venta");
+        }
+
         JsonNode respuesta = paypalClient(venta.getEmpresa().getId(), obtenerAccessToken(venta.getEmpresa().getId())).post()
                 .uri("/v2/checkout/orders/{id}/capture", paypalOrderId)
                 .header("PayPal-Request-Id", "captura-" + ventaId + "-" + System.currentTimeMillis())
@@ -183,6 +194,33 @@ public class PayPalService {
         if (!"COMPLETED".equals(estado)) {
             throw new RuntimeException("El pago no fue completado por PayPal (estado: " + estado + ")");
         }
+        validarMontoCapturado(respuesta, venta);
         return pagoService.aplicarPagoPayPal(venta.getId(), paypalOrderId);
+    }
+
+    /**
+     * Compara importe y moneda capturados con los de la venta antes de acreditar.
+     * Si no coinciden, no se marca la venta como pagada (fallo cerrado).
+     */
+    private void validarMontoCapturado(JsonNode respuesta, Venta venta) {
+        JsonNode unidades = respuesta.path("purchase_units");
+        if (!unidades.isArray() || unidades.isEmpty()) {
+            throw new RuntimeException("PayPal no devolvió el detalle de la compra capturada");
+        }
+        JsonNode monto = unidades.get(0).path("amount");
+        String moneda = monto.path("currency_code").asText("");
+        if (!"PEN".equalsIgnoreCase(moneda)) {
+            throw new RuntimeException("Moneda capturada no válida: " + moneda);
+        }
+        BigDecimal valor;
+        try {
+            valor = new BigDecimal(monto.path("value").asText(""));
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Importe capturado no válido");
+        }
+        if (venta.getTotalVenta() == null || valor.compareTo(venta.getTotalVenta()) != 0) {
+            throw new RuntimeException("El importe capturado (" + valor
+                    + ") no coincide con la venta (" + venta.getTotalVenta() + ")");
+        }
     }
 }

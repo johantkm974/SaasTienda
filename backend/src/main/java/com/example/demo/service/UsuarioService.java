@@ -2,10 +2,15 @@ package com.example.demo.service;
 
 import com.example.demo.model.Empresa;
 import com.example.demo.exception.NotFoundException;
+import com.example.demo.model.Rol;
 import com.example.demo.model.Usuario;
 import com.example.demo.repository.EmpresaRepository;
+import com.example.demo.repository.RolRepository;
 import com.example.demo.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +23,29 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final EmpresaRepository empresaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RolRepository rolRepository;
+
+    private boolean esSupremo() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPREMO"));
+    }
+
+    /**
+     * Impide la escalada de privilegios: solo un usuario SUPREMO puede asignar
+     * el rol SUPREMO. El rol se resuelve desde la BD, por lo que no se confia
+     * en el id o el nombre enviados por el cliente.
+     */
+    private void validarRolAsignable(Rol rolNuevo) {
+        if (rolNuevo == null || rolNuevo.getId() == null) {
+            return;
+        }
+        Rol rolReal = rolRepository.findById(rolNuevo.getId())
+                .orElseThrow(() -> new NotFoundException("Rol no encontrado"));
+        if ("SUPREMO".equals(rolReal.getNombre()) && !esSupremo()) {
+            throw new AccessDeniedException("No tiene permisos para asignar el rol SUPREMO");
+        }
+    }
 
     public Usuario crear(Usuario usuario, Integer empresaId) {
 
@@ -41,6 +69,8 @@ public class UsuarioService {
             throw new RuntimeException("La contraseña es obligatoria");
         }
         usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
+
+        validarRolAsignable(usuario.getRol());
 
         return usuarioRepository.save(usuario);
     }
@@ -69,6 +99,7 @@ public class UsuarioService {
                         usuarioExistente.setContrasena(passwordEncoder.encode(usuarioActualizado.getContrasena()));
                     }
                     if (usuarioActualizado.getRol() != null && usuarioActualizado.getRol().getId() != null) {
+                        validarRolAsignable(usuarioActualizado.getRol());
                         usuarioExistente.setRol(usuarioActualizado.getRol());
                     }
 

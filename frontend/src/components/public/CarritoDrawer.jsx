@@ -34,10 +34,12 @@ const CLASES = {
 
 export function CarritoDrawer() {
   const ctx = useCarrito();
-  if (!ctx) return null;
-
-  const { drawerAbierto, setDrawerAbierto, vistaInicial } = ctx;
+  // Los hooks van siempre antes de cualquier return condicional: si no, el
+  // número de hooks cambia entre renders y React lanza un error de orden.
+  const { drawerAbierto, setDrawerAbierto, vistaInicial } = ctx ?? {};
   const [vistaLocal, setVistaLocal] = useState(vistaInicial);
+
+  if (!ctx) return null;
 
   if (drawerAbierto && vistaInicial !== vistaLocal) {
     setVistaLocal(vistaInicial);
@@ -65,7 +67,7 @@ function DrawerContenido({ vistaInicial }) {
     cliente, clienteToken,
     contraEntregaHabilitado, contraEntregaMaximo,
     cambiarCantidad, quitarDelCarrito, vaciarCarrito, setDrawerAbierto,
-    setVistaInicial, mostrarToast, guardarSesion, cerrarSesion,
+    mostrarToast, guardarSesion, cerrarSesion,
   } = ctx;
 
   const [vista, setVista] = useState(vistaInicial);
@@ -82,6 +84,7 @@ function DrawerContenido({ vistaInicial }) {
   });
   const [resultado, setResultado] = useState(null);
   const [authMode, setAuthMode] = useState('login');
+  const [correoVerificar, setCorreoVerificar] = useState('');
   const [misCompras, setMisCompras] = useState(null);
   const [cargandoCompras, setCargandoCompras] = useState(false);
 
@@ -152,6 +155,14 @@ function DrawerContenido({ vistaInicial }) {
             contrasena,
           }),
         });
+        // El correo ya existía como invitado: hay que demostrar que es nuestro
+        // antes de vincular la cuenta a sus compras anteriores.
+        if (data.requiereVerificacion) {
+          setCorreoVerificar(data.correo);
+          setVista('verificar');
+          mostrarToast('Te enviamos un código a tu correo para confirmarlo');
+          return;
+        }
       } else {
         data = await apiFetch(`/api/tienda/${empresaId}/login`, {
           method: 'POST',
@@ -174,6 +185,35 @@ function DrawerContenido({ vistaInicial }) {
       setVista('carrito');
     } catch (err) {
       mostrarToast(err.message || 'No se pudo completar la operación');
+    }
+  }
+
+  /** Segundo paso: introduce el código recibido y se crea la cuenta. */
+  async function enviarCodigoVerificacion(e) {
+    e.preventDefault();
+    const codigo = new FormData(e.currentTarget).get('codigo');
+    try {
+      const data = await apiFetch(`/api/tienda/${empresaId}/registro/verificar`, {
+        method: 'POST',
+        body: JSON.stringify({ correo: correoVerificar, codigo }),
+      });
+      if (guardarSesion(data)) {
+        mostrarToast('Correo verificado, sesión iniciada');
+        setForm((f) => ({
+          ...f,
+          correo: correoVerificar,
+          nombres: data.cliente?.nombres || f.nombres,
+          apellidos: data.cliente?.apellidos || f.apellidos,
+          telefono: data.cliente?.telefono || f.telefono,
+          direccion: data.cliente?.direccion || f.direccion,
+        }));
+      } else {
+        mostrarToast('Cuenta creada');
+      }
+      setCorreoVerificar('');
+      setVista('carrito');
+    } catch (err) {
+      mostrarToast(err.message || 'No se pudo verificar el código');
     }
   }
 
@@ -476,6 +516,44 @@ function DrawerContenido({ vistaInicial }) {
             ))}
           </div>
         )}
+      </div>
+    );
+  }
+
+  if (vista === 'verificar') {
+    return (
+      <div className="flex-1 overflow-y-auto p-5">
+        <button className="text-xs font-bold text-slate-400 hover:text-slate-600 mb-4" onClick={() => setVista('login')}>
+          ← Volver al registro
+        </button>
+        <h3 className="text-lg font-black text-slate-900 mb-1">Confirma tu correo</h3>
+        <p className="text-xs text-slate-400 mb-5">
+          Ese correo ya tiene datos en esta tienda. Enviamos un código de 6 dígitos a{' '}
+          <strong className="text-slate-600">{correoVerificar}</strong> para comprobar que eres tú
+          antes de vincular la cuenta a tus compras anteriores.
+        </p>
+        <form onSubmit={enviarCodigoVerificacion} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className={CLASES.label}>Código de verificación</label>
+            <input
+              className={CLASES.input}
+              name="codigo"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              autoComplete="one-time-code"
+              placeholder="000000"
+              required
+              autoFocus
+            />
+          </div>
+          <button className={`${CLASES.boton} w-full`} type="submit">
+            Verificar y crear cuenta
+          </button>
+        </form>
+        <p className="text-[11px] text-slate-400 mt-4 leading-relaxed">
+          Caduca en 15 minutos y sólo sirve una vez. Si no lo recibes, revisa tu carpeta de spam.
+        </p>
       </div>
     );
   }

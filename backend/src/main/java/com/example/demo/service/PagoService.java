@@ -24,6 +24,7 @@ import org.springframework.web.client.RestClient;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -92,6 +93,24 @@ public class PagoService {
             item.put("quantity", detalle.getCantidad());
             item.put("currency_id", "PEN");
             item.put("unit_price", detalle.getPrecioUnitario());
+        }
+
+        // El total de la venta incluye el envio (TiendaPublicaService.checkout).
+        // Mercado Pago cobra la suma de los items, de modo que sin este item el
+        // cobro real quedaria por debajo del monto registrado en el pago.
+        Optional<Envio> envioOpt = envioRepository.findByVentaIdAndEmpresaId(venta.getId(), empresaId);
+        BigDecimal costoEnvio = envioOpt.map(Envio::getCostoEnvio).orElse(BigDecimal.ZERO);
+        if (costoEnvio.compareTo(BigDecimal.ZERO) > 0) {
+            Envio envio = envioOpt.get();
+            ObjectNode envioItem = items.addObject();
+            envioItem.put("id", "envio-" + venta.getId());
+            envioItem.put("title", "Costo de envio");
+            envioItem.put("description", envio.getDistrito() != null && !envio.getDistrito().isBlank()
+                    ? "Envio a " + envio.getDistrito()
+                    : "Envio del pedido");
+            envioItem.put("quantity", 1);
+            envioItem.put("currency_id", "PEN");
+            envioItem.put("unit_price", costoEnvio);
         }
 
         JsonNode respuesta = mpClient(tokenMp(empresaId)).post()
@@ -210,6 +229,9 @@ public class PagoService {
         }
 
         String estadoMp = pago.path("status").asText("pending");
+        if ("approved".equals(estadoMp)) {
+            validarAcreditacionMp(pago, ventaId);
+        }
         return aplicarEstadoPago(ventaId, estadoMp, paymentId);
     }
 
@@ -239,9 +261,43 @@ public class PagoService {
             JsonNode primero = resultados.get(0);
             String paymentId = primero.path("id").asText();
             String estadoMp = primero.path("status").asText("approved");
+            if ("approved".equals(estadoMp)) {
+                validarAcreditacionMp(primero, venta.getId());
+            }
             return aplicarEstadoPago(venta.getId(), estadoMp, paymentId);
         }
         return pago;
+    }
+
+    /**
+     * Antes de marcar una venta como pagada, comprueba que el pago de Mercado Pago
+     * corresponde de verdad a esa venta: misma referencia, mismo importe y misma
+     * moneda. Si algo no coincide no se acredita (fallo cerrado).
+     */
+    private void validarAcreditacionMp(JsonNode pagoMp, Integer ventaId) {
+        Venta venta = ventaRepository.findById(ventaId)
+                .orElseThrow(() -> new NotFoundException("Venta no encontrada"));
+
+        String referencia = pagoMp.path("external_reference").asText("");
+        if (!String.valueOf(venta.getId()).equals(referencia)) {
+            throw new RuntimeException("El pago de Mercado Pago no corresponde a la venta " + ventaId);
+        }
+
+        String moneda = pagoMp.path("currency_id").asText("");
+        if (!"PEN".equalsIgnoreCase(moneda)) {
+            throw new RuntimeException("Moneda del pago no válida: " + moneda);
+        }
+
+        BigDecimal montoMp;
+        try {
+            montoMp = new BigDecimal(pagoMp.path("transaction_amount").asText(""));
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Importe del pago de Mercado Pago no válido");
+        }
+        if (venta.getTotalVenta() == null || montoMp.compareTo(venta.getTotalVenta()) != 0) {
+            throw new RuntimeException("El importe cobrado (" + montoMp
+                    + ") no coincide con la venta (" + venta.getTotalVenta() + ")");
+        }
     }
 
     @Transactional

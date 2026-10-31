@@ -57,6 +57,19 @@ class ApiIntegrationTest {
 
     @BeforeEach
     void resetEstadoEntreTests() {
+        // La suite no depende de la contraseña semilla. V11 la rota, y el valor
+        // real no debe aparecer en el código: aquí se fija una conocida solo
+        // para la BD de tests, de modo que cambiar el seed no rompa la suite.
+        String hashTest = passwordEncoder.encode("12345678");
+        jdbcTemplate.update(
+                "UPDATE usuario SET contrasena = ? WHERE correo IN (?, ?, ?, ?, ?)",
+                hashTest,
+                "supremo@saas.local",
+                "admin@techstore.pe",
+                "admin@inkaelectronics.pe",
+                "admin@andescomputers.pe",
+                "admin@pacifictech.pe");
+
         jdbcTemplate.update("UPDATE usuario SET intentos_fallidos = 0, bloqueado_hasta = NULL");
         jdbcTemplate.update("UPDATE producto SET eliminado = 0");
         jdbcTemplate.update("UPDATE categoria SET eliminado = 0");
